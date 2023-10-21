@@ -4,12 +4,12 @@ use gtk::gio;
 mod paper;
 mod ui;
 mod util;
+mod bib;
 use paper::Paper;
-use util::read;
+use bib::get_bib;
 
 fn main() {
-    let v = read("test.bib".into());
-    println!("{:?}", v);
+    get_bib("test.bib".into());
     let application = gtk::Application::new(Some("com.github.cohsh.pdf-bib"), Default::default());
     application.connect_activate(build_ui);
     application.run();
