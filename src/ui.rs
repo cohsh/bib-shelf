@@ -9,19 +9,28 @@ pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
         .homogeneous(true)
         .build();
 
-    let title = gtk::Label::builder().halign(gtk::Align::Start).build();
+    let title = gtk::Label::builder()
+        .halign(gtk::Align::Start)
+        .width_chars(50)
+        .build();
     paper
         .bind_property("title", &title, "label")
         .sync_create()
         .build();
 
-    let author = gtk::Label::new(None);
+    let author = gtk::Label::builder()
+        .halign(gtk::Align::Start)
+        .width_chars(20)
+        .build();
     paper
         .bind_property("author", &author, "label")
         .sync_create()
         .build();
 
-    let year = gtk::Label::builder().halign(gtk::Align::End).build();
+    let year = gtk::Label::builder()
+        .halign(gtk::Align::End)
+        .width_chars(5)
+        .build();
     paper
         .bind_property("year", &year, "label")
         .sync_create()

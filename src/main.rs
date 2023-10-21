@@ -17,7 +17,9 @@ fn main() {
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     window.set_title(Some("PDF-bib"));
-    window.set_default_size(1200, 600);
+
+    window.set_default_size(1600, 900);
+
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
     let model = gio::ListStore::new::<Paper>();
@@ -40,7 +42,8 @@ fn build_ui(application: &gtk::Application) {
 
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
-        .min_content_height(400)
+        .min_content_height(900)
+        .min_content_width(1600)
         .child(&list_box)
         .build();
 
