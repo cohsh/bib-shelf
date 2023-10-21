@@ -7,6 +7,7 @@ mod util;
 mod bib;
 use paper::Paper;
 use bib::get_bib;
+use util::mkdir;
 
 fn main() {
     let application = gtk::Application::new(Some("com.github.cohsh.pdf-bib"), Default::default());
@@ -32,6 +33,7 @@ fn build_ui(application: &gtk::Application) {
             v[1].clone(),
             v[2].clone(),
         ));
+        mkdir("data/".to_string() + &v[3]);
     }
 
     let list_box = gtk::ListBox::new();
