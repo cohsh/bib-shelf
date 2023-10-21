@@ -25,7 +25,7 @@ pub fn get_bib(filename: String) -> Vec<[String; 3]>{
                 v_bib[2] = item_re.replace("year=", "");
             }
         }
-        if v_bib != ["", "", ""] {
+        if (v_bib[0] != "") && (v_bib[1] != "") && (v_bib[2] != "") {
             v_bibs.push(v_bib);
         }
     }

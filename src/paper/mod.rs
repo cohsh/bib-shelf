@@ -7,7 +7,7 @@ glib::wrapper! {
 }
 
 impl Paper {
-    pub fn new(title: String, author: String, year: i64) -> Self {
+    pub fn new(title: String, author: String, year: String) -> Self {
         let obj = glib::Object::new::<Paper>();
         obj.set_title(title);
         obj.set_author(author);

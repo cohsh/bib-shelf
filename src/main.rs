@@ -9,7 +9,6 @@ use paper::Paper;
 use bib::get_bib;
 
 fn main() {
-    let v_bib = get_bib("test.bib".into());
     let application = gtk::Application::new(Some("com.github.cohsh.pdf-bib"), Default::default());
     application.connect_activate(build_ui);
     application.run();
@@ -23,16 +22,15 @@ fn build_ui(application: &gtk::Application) {
 
     let model = gio::ListStore::new::<Paper>();
 
-    model.append(&Paper::new(
-        "Development of Hogehoge".into(),
-        "Cat Schrodinger".into(),
-        1925,
-    ));
-    model.append(&Paper::new(
-        "Theory of Fugafuga".into(),
-        "Fugafuga".into(),
-        1185,
-    ));
+    let mut v_bib = get_bib("test.bib".into());
+
+    for v in v_bib.iter_mut(){
+        model.append(&Paper::new(
+            v[0].clone(),
+            v[1].clone(),
+            v[2].clone(),
+        ));
+    }
 
     let list_box = gtk::ListBox::new();
     list_box.bind_model(Some(&model), |item| {

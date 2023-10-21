@@ -1,7 +1,7 @@
 use gtk::glib;
 use gtk::glib::{prelude::*, Properties};
 use gtk::subclass::prelude::*;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 #[derive(Debug, Properties)]
 #[properties(wrapper_type = super::Paper)]
@@ -11,7 +11,7 @@ pub struct Paper {
     #[property(get, set)]
     author: RefCell<String>,
     #[property(get, set)]
-    year: Cell<i64>,
+    year: RefCell<String>,
 }
 
 impl Default for Paper {
@@ -19,7 +19,7 @@ impl Default for Paper {
         Self {
             title: RefCell::new(String::new()),
             author: RefCell::new(String::new()),
-            year: Cell::new(0),
+            year: RefCell::new(String::new()),
         }
     }
 }
