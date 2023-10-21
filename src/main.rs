@@ -9,7 +9,7 @@ use paper::Paper;
 use bib::get_bib;
 
 fn main() {
-    get_bib("test.bib".into());
+    let v_bib = get_bib("test.bib".into());
     let application = gtk::Application::new(Some("com.github.cohsh.pdf-bib"), Default::default());
     application.connect_activate(build_ui);
     application.run();
