@@ -16,13 +16,19 @@ pub fn get_bib(filename: String) -> Vec<[String; 3]>{
         for item in v.iter_mut(){
             let item_re = Regex::new(r"^ *|,$").unwrap().replace_all(item, "");
             if item_re.contains("title") {
-                v_bib[0] = item_re.replace("title=", "");
+                let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
+                let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
+                v_bib[0] = (&tmp2).to_string();
             }
             if item_re.contains("author") {
-                v_bib[1] = item_re.replace("author=", "");
+                let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
+                let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
+                v_bib[1] = (&tmp2).to_string();
             }
             if item_re.contains("year") {
-                v_bib[2] = item_re.replace("year=", "");
+                let tmp = Regex::new(r"year|=").unwrap().replace_all(&item_re, "");
+                let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
+                v_bib[2] = (&tmp2).to_string();
             }
         }
         if (v_bib[0] != "") && (v_bib[1] != "") && (v_bib[2] != "") {

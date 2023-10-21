@@ -22,7 +22,7 @@ fn build_ui(application: &gtk::Application) {
 
     let model = gio::ListStore::new::<Paper>();
 
-    let mut v_bib = get_bib("test.bib".into());
+    let mut v_bib = get_bib("ref.bib".into());
 
     for v in v_bib.iter_mut(){
         model.append(&Paper::new(
