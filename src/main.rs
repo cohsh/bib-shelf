@@ -3,9 +3,13 @@ use gtk::gio;
 
 mod paper;
 mod ui;
+mod util;
 use paper::Paper;
+use util::read;
 
 fn main() {
+    let v = read("test.bib".into());
+    println!("{:?}", v);
     let application = gtk::Application::new(Some("com.github.cohsh.pdf-bib"), Default::default());
     application.connect_activate(build_ui);
     application.run();

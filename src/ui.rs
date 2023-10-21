@@ -1,7 +1,5 @@
 use crate::Paper;
 use gtk;
-use gtk::gio;
-use gtk::glib;
 use gtk::prelude::*;
 
 pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
