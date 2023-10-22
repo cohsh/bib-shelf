@@ -27,14 +27,16 @@ fn build_ui(application: &gtk::Application) {
 
     let mut v_bib = get_bib("ref.bib".into());
 
+    mkdir("data".to_string());
     for v in v_bib.iter_mut(){
+        let path = "data/".to_string() + &v[3].clone();
         model.append(&Paper::new(
             v[0].clone(),
             v[1].clone(),
             v[2].clone(),
+            path.clone(),
         ));
-        mkdir("data".to_string());
-        mkdir("data/".to_string() + &v[3]);
+        mkdir(path);
     }
 
     let list_box = gtk::ListBox::new();

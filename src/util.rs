@@ -13,7 +13,8 @@ pub fn read(filename: String) -> String {
 
 pub fn mkdir(filename: String) -> u8 {
     match fs::create_dir(filename.clone()) {
-        Err(e) => panic!("{}: {}", filename, e),
-        Ok(_) => 0,
+//        Err(e) => panic!("{}: {}", filename, e),
+        Err(_) => 1,
+        Ok(__) => 0,
     }
 }

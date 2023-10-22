@@ -16,7 +16,7 @@ pub fn get_bib(filename: String) -> Vec<[String; 5]>{
         let mut v: Vec<&str> = s.split('\n').collect();
 
         let tmp0 = v[0];
-        let tmp1 = Regex::new(r"^ *|,$").unwrap().replace_all(&tmp0, "");
+        let tmp1 = Regex::new(r"^ *|,|\{|\}$").unwrap().replace_all(&tmp0, "");
         let tmp2 = Regex::new(r"(^article)").unwrap().replace_all(&tmp1, "${1}_");
         let tmp3 = Regex::new(r"([0-9]+)").unwrap().replace_all(&tmp2, "${1}_");
         v_bib[3] = (&tmp3).to_string();

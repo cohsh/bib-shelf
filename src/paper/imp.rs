@@ -12,6 +12,8 @@ pub struct Paper {
     author: RefCell<String>,
     #[property(get, set)]
     year: RefCell<String>,
+    #[property(get, set)]
+    path: RefCell<String>,
 }
 
 impl Default for Paper {
@@ -20,6 +22,7 @@ impl Default for Paper {
             title: RefCell::new(String::new()),
             author: RefCell::new(String::new()),
             year: RefCell::new(String::new()),
+            path: RefCell::new(String::new()),
         }
     }
 }
