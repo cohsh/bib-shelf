@@ -33,6 +33,7 @@ fn build_ui(application: &gtk::Application) {
             v[1].clone(),
             v[2].clone(),
         ));
+        mkdir("data".to_string());
         mkdir("data/".to_string() + &v[3]);
     }
 

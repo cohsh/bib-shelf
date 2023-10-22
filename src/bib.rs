@@ -4,7 +4,7 @@ use crate::util::read;
 
 pub fn get_bib(filename: String) -> Vec<[String; 5]>{
     let mut v_bibs: Vec<[String; 5]> = Vec::new();
-    let mut s: String = read(filename.into());
+    let s: String = read(filename.into());
 
     let mut v_string: Vec<&str> = s.split('@').collect();
 
