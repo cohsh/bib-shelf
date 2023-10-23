@@ -20,7 +20,7 @@ fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     window.set_title(Some("PDF-bib"));
 
-    window.set_default_size(1600, 900);
+    window.set_default_size(800, 600);
 
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
