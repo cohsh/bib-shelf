@@ -1,3 +1,4 @@
+use std::process::Command;
 use gtk::prelude::*;
 use gtk::gio;
 
@@ -29,16 +30,17 @@ fn build_ui(application: &gtk::Application) {
 
     mkdir("data".to_string());
     for v in v_bib.iter_mut(){
-        let path = "data/".to_string() + &v[3].clone();
+        let dir = "data/".to_string() + &v[3].clone();
+        mkdir(dir.clone());
+        let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
         model.append(&Paper::new(
             v[0].clone(),
             v[1].clone(),
             v[2].clone(),
-            path.clone(),
+            path_pdf,
         ));
-        let file_bib = path.clone() + "/" + &v[3].clone() + ".bib";
-        mkdir(path);
-        write(file_bib, &v[4]);
+        let path_bib = dir + "/" + &v[3].clone() + ".bib";
+        write(path_bib, &v[4]);
     }
 
     let list_box = gtk::ListBox::new();
@@ -47,6 +49,20 @@ fn build_ui(application: &gtk::Application) {
         ui::display_ui(paper).upcast::<gtk::Widget>()
     });
 
+    list_box.connect_row_activated(move |list_box, row| {
+        let index = row.index();
+        if let Some(item) = model.item(index as u32) {
+            if let Some(paper) = item.downcast_ref::<Paper>() {
+                let pdf_path = paper.path();
+                println!("PDF path: {}", pdf_path);
+    
+                if let Err(err) = Command::new("open").arg(pdf_path).spawn() {
+                    eprintln!("Failed to open PDF: {}", err);
+                }
+            }
+        }
+    });    
+    
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .min_content_height(900)

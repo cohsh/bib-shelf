@@ -18,6 +18,9 @@ target/
 
 /target
 
+# Mac
+.DS_Store
+
 # Private
 ref.bib
 data/
