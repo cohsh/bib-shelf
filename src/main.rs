@@ -12,7 +12,7 @@ mod util;
 mod bib;
 
 use paper::Paper;
-use bib::{get_bib, get_bib_default};
+use bib::{get_bib, get_bib_first};
 use util::{mkdir, write};
 
 #[derive(Debug)]
@@ -86,7 +86,7 @@ fn build_ui(application: &gtk::Application) {
 
     vbox.append(&scrolled_window);
 
-    let mut v_bib = get_bib_default();
+    let mut v_bib = get_bib_first();
 
     for v in v_bib.iter_mut(){
         let dir = "papers/".to_string() + &v[3].clone();
@@ -130,6 +130,8 @@ fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
             let start = buffer.start_iter();
             let end = buffer.end_iter();
             let t = buffer.text(&start, &end, false).to_string();
+
+            println!("{:?}", t);
 
             let mut v_bib = get_bib(t);
 
