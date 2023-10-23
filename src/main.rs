@@ -10,6 +10,7 @@ mod paper;
 mod ui;
 mod util;
 mod bib;
+
 use paper::Paper;
 use bib::get_bib;
 use util::{mkdir, write};
@@ -50,7 +51,7 @@ fn build_ui(application: &gtk::Application) {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
     window.set_title(Some("PDF-bib"));
-    window.set_default_size(800, 600);
+    window.set_default_size(1200, 1000);
 
     let bib = Bib::default();
 
@@ -78,8 +79,8 @@ fn build_ui(application: &gtk::Application) {
     
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
-        .min_content_height(900)
-        .min_content_width(1600)
+        .min_content_height(500)
+        .min_content_width(1000)
         .child(&list_box)
         .build();
 
@@ -98,17 +99,24 @@ fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
         .orientation(gtk::Orientation::Horizontal)
         .build();
 
-    let text = gtk::Entry::builder().placeholder_text("new .bib text(s)").build();
+    let text_view = gtk::TextView::builder()
+        .editable(true)
+        .width_request(1000)
+        .height_request(500)
+        .build();
     
     let new_button = gtk::Button::builder().label("add").build();
 
     new_button.connect_clicked(
-        glib::clone!(@weak text, @strong bib => move |_| {
-            let t = text.buffer().text().to_string();
+        glib::clone!(@weak text_view, @strong bib => move |_| {
+            let buffer = text_view.buffer();
+            let start = buffer.start_iter();
+            let end = buffer.end_iter();
+            let t = buffer.text(&start, &end, false).to_string();
 
             let mut v_bib = get_bib(t);
 
-            mkdir("data".to_string());
+            mkdir("papers".to_string());
             for v in v_bib.iter_mut(){
                 let dir = "papers/".to_string() + &v[3].clone();
                 mkdir(dir.clone());
@@ -127,7 +135,15 @@ fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
             }
         }),
     );
-    hbox.append(&text);
+
+    let scrolled_window = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .min_content_height(500)
+        .min_content_width(1000)
+        .child(&text_view)
+        .build();
+
+    hbox.append(&scrolled_window);
     hbox.append(&new_button);
     hbox
 }
