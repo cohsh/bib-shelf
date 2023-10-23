@@ -12,7 +12,7 @@ mod util;
 mod bib;
 
 use paper::Paper;
-use bib::get_bib;
+use bib::{get_bib, get_bib_default};
 use util::{mkdir, write};
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ fn build_ui(application: &gtk::Application) {
     window.set_title(Some("PDF-bib"));
     window.set_default_size(1200, 1000);
 
-    let bib = Bib::default();
+    let mut bib = Bib::default();
 
     let list_box = gtk::ListBox::new();
     list_box.bind_model(Some(bib.model()), |item| {
@@ -85,6 +85,23 @@ fn build_ui(application: &gtk::Application) {
         .build();
 
     vbox.append(&scrolled_window);
+
+    let mut v_bib = get_bib_default();
+
+    for v in v_bib.iter_mut(){
+        let dir = "papers/".to_string() + &v[3].clone();
+        mkdir(dir.clone());
+        let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
+
+        let paper = Paper::new(
+            v[0].clone(),
+            v[1].clone(),
+            v[2].clone(),
+            path_pdf,
+        );
+
+        bib.add_paper(&paper);
+    }
 
     let bib = Rc::new(RefCell::new(bib));
 

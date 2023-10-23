@@ -1,6 +1,7 @@
+use std::fs;
 use regex::Regex;
 
-pub fn get_bib(text: String) -> Vec<[String; 5]>{
+pub fn get_bib(text: String) -> Vec<[String; 5]> {
     let mut v_bibs: Vec<[String; 5]> = Vec::new();
 
     let mut v_string: Vec<&str> = text.split('@').collect();
@@ -43,22 +44,25 @@ pub fn get_bib(text: String) -> Vec<[String; 5]>{
     v_bibs
 }
 
-/*
-pub fn get_bib(filename: String) -> Vec<[String; 5]>{
+pub fn get_bib_default() -> Vec<[String; 5]> {
     let mut v_bibs: Vec<[String; 5]> = Vec::new();
-    let s: String = read(filename.into());
 
-    let mut v_string: Vec<&str> = s.split('@').collect();
+    let dirs = fs::read_dir("./papers").unwrap();
 
-    for s in v_string.iter_mut(){
+    for dir_entry in dirs {
+        let dir_entry = dir_entry.unwrap();
+        let path = dir_entry.path();
 
+        let file_bib = path.join(format!("{}.bib", path.file_name().unwrap().to_str().unwrap()));
+        let s = fs::read_to_string(file_bib).expect("Unable to read file");
+        
         let mut v_bib: [String; 5] = Default::default();
-        v_bib[4] = "@".to_string() + s;
+        v_bib[4] = s.clone();
 
         let mut v: Vec<&str> = s.split('\n').collect();
 
         let tmp0 = v[0];
-        let tmp1 = Regex::new(r"^ *|,|\{|\}$").unwrap().replace_all(&tmp0, "");
+        let tmp1 = Regex::new(r"^ *|,|\{|\}|@$").unwrap().replace_all(&tmp0, "");
         let tmp2 = Regex::new(r"(^article)").unwrap().replace_all(&tmp1, "${1}_");
         let tmp3 = Regex::new(r"([0-9]+)").unwrap().replace_all(&tmp2, "${1}_");
         v_bib[3] = (&tmp3).to_string();
@@ -85,6 +89,6 @@ pub fn get_bib(filename: String) -> Vec<[String; 5]>{
             v_bibs.push(v_bib);
         }
     }
+
     v_bibs
 }
-*/
