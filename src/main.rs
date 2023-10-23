@@ -135,7 +135,6 @@ fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
 
             let mut v_bib = get_bib(t);
 
-            mkdir("papers".to_string());
             for v in v_bib.iter_mut(){
                 let dir = "papers/".to_string() + &v[3].clone();
                 mkdir(dir.clone());
