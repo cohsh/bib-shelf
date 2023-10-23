@@ -1,4 +1,4 @@
-# pdf-bib
+# bib-shelf
 under development
 
 # Reference
