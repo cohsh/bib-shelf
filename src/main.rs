@@ -1,6 +1,10 @@
 use std::process::Command;
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use gtk::prelude::*;
 use gtk::gio;
+use gtk::glib;
 
 mod paper;
 mod ui;
@@ -48,24 +52,7 @@ fn build_ui(application: &gtk::Application) {
     window.set_title(Some("PDF-bib"));
     window.set_default_size(800, 600);
 
-    let mut bib = Bib::default();
-
-    let mut v_bib = get_bib("ref.bib".into());
-
-    mkdir("data".to_string());
-    for v in v_bib.iter_mut(){
-        let dir = "data/".to_string() + &v[3].clone();
-        mkdir(dir.clone());
-        let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
-        bib.add_paper(&Paper::new(
-            v[0].clone(),
-            v[1].clone(),
-            v[2].clone(),
-            path_pdf,
-        ));
-        let path_bib = dir + "/" + &v[3].clone() + ".bib";
-        write(path_bib, &v[4]);
-    }
+    let bib = Bib::default();
 
     let list_box = gtk::ListBox::new();
     list_box.bind_model(Some(bib.model()), |item| {
@@ -73,9 +60,11 @@ fn build_ui(application: &gtk::Application) {
         ui::display_ui(paper).upcast::<gtk::Widget>()
     });
 
-    list_box.connect_row_activated(move |_list_box, row| {
+    let model = bib.model();
+
+    list_box.connect_row_activated(glib::clone!(@weak model => move |_list_box, row| {
         let index = row.index();
-        if let Some(item) = bib.model().item(index as u32) {
+        if let Some(item) = model.item(index as u32) {
             if let Some(paper) = item.downcast_ref::<Paper>() {
                 let pdf_path = paper.path();
                 println!("PDF path: {}", pdf_path);
@@ -85,7 +74,7 @@ fn build_ui(application: &gtk::Application) {
                 }
             }
         }
-    });    
+    }));    
     
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
@@ -96,11 +85,49 @@ fn build_ui(application: &gtk::Application) {
 
     vbox.append(&scrolled_window);
 
-    let entry = gtk::Entry::builder()
-        .editable(true)
-        .build();
-    vbox.append(&entry);
+    let bib = Rc::new(RefCell::new(bib));
+
+    vbox.append(&input_box(bib));
 
     window.set_child(Some(&vbox));
     window.show();
+}
+
+fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
+    let hbox = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .build();
+
+    let text = gtk::Entry::builder().placeholder_text("new .bib text(s)").build();
+    
+    let new_button = gtk::Button::builder().label("add").build();
+
+    new_button.connect_clicked(
+        glib::clone!(@weak text, @strong bib => move |_| {
+            let t = text.buffer().text().to_string();
+
+            let mut v_bib = get_bib(t);
+
+            mkdir("data".to_string());
+            for v in v_bib.iter_mut(){
+                let dir = "papers/".to_string() + &v[3].clone();
+                mkdir(dir.clone());
+                let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
+
+                let paper = Paper::new(
+                    v[0].clone(),
+                    v[1].clone(),
+                    v[2].clone(),
+                    path_pdf,
+                );
+                bib.borrow_mut().add_paper(&paper);
+
+                let path_bib = dir + "/" + &v[3].clone() + ".bib";
+                write(path_bib, &v[4]);
+            }
+        }),
+    );
+    hbox.append(&text);
+    hbox.append(&new_button);
+    hbox
 }

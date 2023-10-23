@@ -26,7 +26,7 @@ pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
         .build();
 
     let year = gtk::Label::builder()
-        .halign(gtk::Align::End)
+        .halign(gtk::Align::Start)
         .build();
     paper
         .bind_property("year", &year, "label")
@@ -34,8 +34,8 @@ pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
         .build();
 
     title.set_hexpand(true);
+    hbox.append(&year);
     hbox.append(&title);
     hbox.append(&author);
-    hbox.append(&year);
     hbox
 }
