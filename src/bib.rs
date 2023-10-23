@@ -6,15 +6,17 @@ use crate::util::mkdir;
 fn extract(text: String) -> [String; 5] {
     let mut v_bib: [String; 5] = Default::default();
 
+    let text = text.replace("\r", "").replace("\'", "");
+
     v_bib[4] = text.clone();
 
     let mut v: Vec<&str> = text.split('\n').collect();
 
-    let tmp0 = v[0];
+    let tmp0 = format!("{}", v[0]);
     let tmp1 = Regex::new(r"^ *|,|\{|\}|@$").unwrap().replace_all(&tmp0, "");
     let tmp2 = Regex::new(r"(^article)").unwrap().replace_all(&tmp1, "${1}_");
     let tmp3 = Regex::new(r"([0-9]+)").unwrap().replace_all(&tmp2, "${1}_");
-    v_bib[3] = (&tmp3).to_string();
+    v_bib[3] = format!("{}", (&tmp3).to_string());
 
     for item in v.iter_mut(){
         let item_re = Regex::new(r"^ *|,$|\{|\}").unwrap().replace_all(item, "");
