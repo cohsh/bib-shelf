@@ -1,6 +1,7 @@
 use std::process::Command;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::env;
 
 use gtk::prelude::*;
 use gtk::gio;
@@ -86,12 +87,26 @@ fn build_ui(application: &gtk::Application) {
                 let pdf_path = paper.path();
                 println!("PDF path: {}", pdf_path);
     
-                if let Err(err) = Command::new("open").arg(pdf_path).spawn() {
+                let result = if cfg!(target_os = "linux") {
+                    if env::var("WSL_DISTRO_NAME").is_ok() {
+                        Command::new("powershell.exe").args(&["/c", "start", &pdf_path]).spawn()
+                    } else {
+                        Command::new("xdg-open").arg(pdf_path).spawn()
+                    }
+                } else if cfg!(target_os = "macos") {
+                    Command::new("open").arg(pdf_path).spawn()
+                } else if cfg!(target_os = "windows") {
+                    Command::new("explorer").arg(pdf_path).spawn()
+                } else {
+                    Err(std::io::Error::new(std::io::ErrorKind::Other, "Unsupported OS"))
+                };
+    
+                if let Err(err) = result {
                     eprintln!("Failed to open PDF: {}", err);
                 }
             }
         }
-    }));    
+    }));
     
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
