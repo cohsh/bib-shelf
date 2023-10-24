@@ -44,10 +44,12 @@ fn shorten(s: &str, n_max: usize) -> String {
 
     let char_vec: Vec<char> = s.chars().collect();
     if char_vec.len() <= n_max {
-        char_vec.into_iter().collect()
+        let tmp: String = char_vec.into_iter().collect();
+        let result = format!("{:-width$}", tmp, width = n_max);
+        result
     } else {
         let shortened: String = s.chars().take(n_max).collect();
-        let result = format!("{}......", shortened);
+        let result = format!("{:-width$}...", shortened, width = n_max - 3);
         result
     }
 }

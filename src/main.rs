@@ -37,8 +37,6 @@ impl Shelf {
             mkdir(dir.clone());
             let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
 
-//            println!("{:?}", v[2]);
-
             let paper = Paper::new(
                 v[0].clone(),
                 v[1].clone(),

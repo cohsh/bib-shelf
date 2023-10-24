@@ -35,6 +35,7 @@ pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
 
 
     title.set_hexpand(true);
+    author.set_hexpand(true);
     hbox.append(&year);
     hbox.append(&author);
     hbox.append(&title);
