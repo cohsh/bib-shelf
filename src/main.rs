@@ -131,8 +131,6 @@ fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
             let end = buffer.end_iter();
             let t = buffer.text(&start, &end, false).to_string();
 
-            println!("{:?}", t);
-
             let mut v_bib = get_bib(t);
 
             for v in v_bib.iter_mut(){

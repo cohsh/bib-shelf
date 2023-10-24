@@ -69,7 +69,6 @@ pub fn get_bib_first() -> Vec<[String; 5]> {
     for dir_entry in dirs {
         let dir_entry = dir_entry.unwrap();
         let path = dir_entry.path();
-        println!("{:?}", path);
 
         let file_bib = path.join(format!("{}.bib", path.file_name().unwrap().to_str().unwrap()));
         let text = fs::read_to_string(file_bib).expect("Unable to read file");
