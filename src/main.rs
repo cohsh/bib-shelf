@@ -16,11 +16,11 @@ use bib::{get_bib, get_bib_first};
 use util::{mkdir, write};
 
 #[derive(Debug)]
-pub struct Bib {
+pub struct Shelf {
     model: gio::ListStore,
 }
 
-impl Default for Bib {
+impl Default for Shelf {
     fn default() -> Self {
         let model = gio::ListStore::new::<Paper>();
 
@@ -30,7 +30,7 @@ impl Default for Bib {
     }
 }
 
-impl Bib {
+impl Shelf {
     pub fn add_papers(&mut self, mut v_bib: Vec<[String; 5]>) {
         for v in v_bib.iter_mut(){
             let dir = "papers/".to_string() + &v[3].clone();
@@ -69,7 +69,7 @@ fn build_ui(application: &gtk::Application) {
     window.set_title(Some("Bib Shelf"));
     window.set_default_size(1200, 1000);
 
-    let mut bib = Bib::default();
+    let mut bib = Shelf::default();
 
     let list_box = gtk::ListBox::new();
     list_box.bind_model(Some(bib.model()), |item| {
@@ -113,7 +113,7 @@ fn build_ui(application: &gtk::Application) {
     window.show();
 }
 
-fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
+fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .build();
