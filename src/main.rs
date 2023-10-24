@@ -31,8 +31,24 @@ impl Default for Bib {
 }
 
 impl Bib {
-    pub fn add_paper(&mut self, paper: &Paper) {
-        self.model.append(paper);
+    pub fn add_papers(&mut self, mut v_bib: Vec<[String; 5]>) {
+        for v in v_bib.iter_mut(){
+            let dir = "papers/".to_string() + &v[3].clone();
+            mkdir(dir.clone());
+            let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
+
+            let paper = Paper::new(
+                v[0].clone(),
+                v[1].clone(),
+                v[2].clone(),
+                path_pdf,
+            );
+
+            self.model.append(&paper);
+
+            let path_bib = dir + "/" + &v[3].clone() + ".bib";
+            write(path_bib, &v[4]);
+        }
     }
 
     pub fn model(&self) -> &gio::ListStore {
@@ -86,22 +102,8 @@ fn build_ui(application: &gtk::Application) {
 
     vbox.append(&scrolled_window);
 
-    let mut v_bib = get_bib_first();
-
-    for v in v_bib.iter_mut(){
-        let dir = "papers/".to_string() + &v[3].clone();
-        mkdir(dir.clone());
-        let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
-
-        let paper = Paper::new(
-            v[0].clone(),
-            v[1].clone(),
-            v[2].clone(),
-            path_pdf,
-        );
-
-        bib.add_paper(&paper);
-    }
+    let v_bib = get_bib_first();
+    bib.add_papers(v_bib);
 
     let bib = Rc::new(RefCell::new(bib));
 
@@ -131,24 +133,8 @@ fn input_box(bib: Rc<RefCell<Bib>>) -> gtk::Box {
             let end = buffer.end_iter();
             let t = buffer.text(&start, &end, false).to_string();
 
-            let mut v_bib = get_bib(t);
-
-            for v in v_bib.iter_mut(){
-                let dir = "papers/".to_string() + &v[3].clone();
-                mkdir(dir.clone());
-                let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
-
-                let paper = Paper::new(
-                    v[0].clone(),
-                    v[1].clone(),
-                    v[2].clone(),
-                    path_pdf,
-                );
-                bib.borrow_mut().add_paper(&paper);
-
-                let path_bib = dir + "/" + &v[3].clone() + ".bib";
-                write(path_bib, &v[4]);
-            }
+            let v_bib = get_bib(t);
+            bib.borrow_mut().add_papers(v_bib);
         }),
     );
 
