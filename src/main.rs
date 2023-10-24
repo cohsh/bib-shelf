@@ -70,6 +70,8 @@ fn build_ui(application: &gtk::Application) {
     window.set_title(Some("Bib Shelf"));
     window.set_default_size(1200, 1000);
 
+    vbox.append(&item_name_box());
+
     let mut bib = Shelf::default();
 
     let list_box = gtk::ListBox::new();
@@ -171,5 +173,41 @@ fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
 
     hbox.append(&scrolled_window);
     hbox.append(&new_button);
+    hbox
+}
+
+fn item_name_box() -> gtk::Box {
+    let hbox = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(20)
+        .homogeneous(true)
+        .build();
+    
+    let label_year = gtk::Label::builder()
+        .label("Year")
+        .halign(gtk::Align::Start)
+        .build();
+
+    let label_author = gtk::Label::builder()
+        .label("Author")
+        .halign(gtk::Align::Start)
+        .build();
+
+    let label_title = gtk::Label::builder()
+        .label("Title")
+        .halign(gtk::Align::Start)
+        .build();
+    
+    let label_pdf = gtk::Label::builder()
+        .label("📚")
+        .halign(gtk::Align::Start)
+        .build();
+
+    label_title.set_hexpand(true);
+    label_author.set_hexpand(true);
+    hbox.append(&label_year);
+    hbox.append(&label_author);
+    hbox.append(&label_title);
+    hbox.append(&label_pdf);
     hbox
 }
