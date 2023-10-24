@@ -6,7 +6,7 @@ use crate::util::mkdir;
 fn extract(text: String) -> [String; 5] {
     let mut v_bib: [String; 5] = Default::default();
 
-    let text = text.replace("\r", "").replace("\'", "");
+    let text = text.replace("\r", "").replace("\'", "").replace("\t", "").replace("\"", "");
     v_bib[4] = text.clone();
     let text = text.replace("@", "");
 
@@ -20,18 +20,18 @@ fn extract(text: String) -> [String; 5] {
 
     for item in v.iter_mut(){
         let item_re = Regex::new(r"^ *|,$|\{|\}").unwrap().replace_all(item, "");
-        if item_re.contains("title") {
-            let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
+        if item_re.contains("year") {
+            let tmp = Regex::new(r"year|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
             v_bib[0] = (&tmp2).to_string();
         }
-        if item_re.contains("author") {
-            let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
+        if item_re.contains("title") {
+            let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
             v_bib[1] = (&tmp2).to_string();
         }
-        if item_re.contains("year") {
-            let tmp = Regex::new(r"year|=").unwrap().replace_all(&item_re, "");
+        if item_re.contains("author") {
+            let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
             v_bib[2] = (&tmp2).to_string();
         }

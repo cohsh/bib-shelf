@@ -7,11 +7,11 @@ use std::cell::RefCell;
 #[properties(wrapper_type = super::Paper)]
 pub struct Paper {
     #[property(get, set)]
+    year: RefCell<String>,
+    #[property(get, set)]
     title: RefCell<String>,
     #[property(get, set)]
     author: RefCell<String>,
-    #[property(get, set)]
-    year: RefCell<String>,
     #[property(get, set)]
     path: RefCell<String>,
 }
@@ -19,9 +19,9 @@ pub struct Paper {
 impl Default for Paper {
     fn default() -> Self {
         Self {
+            year: RefCell::new(String::new()),
             title: RefCell::new(String::new()),
             author: RefCell::new(String::new()),
-            year: RefCell::new(String::new()),
             path: RefCell::new(String::new()),
         }
     }
