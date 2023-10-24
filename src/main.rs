@@ -122,6 +122,12 @@ fn build_ui(application: &gtk::Application) {
 
     let bib = Rc::new(RefCell::new(bib));
 
+    let bib_label = gtk::Label::builder()
+        .label("New bib(s)")
+        .halign(gtk::Align::Start)
+        .build();
+
+    vbox.append(&bib_label);
     vbox.append(&input_box(bib));
 
     window.set_child(Some(&vbox));
