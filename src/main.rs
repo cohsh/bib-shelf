@@ -96,7 +96,7 @@ fn build_ui(application: &gtk::Application) {
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .min_content_height(500)
-        .min_content_width(1000)
+        .min_content_width(1200)
         .child(&list_box)
         .build();
 
@@ -120,11 +120,14 @@ fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
 
     let text_view = gtk::TextView::builder()
         .editable(true)
-        .width_request(1000)
+        .width_request(1100)
         .height_request(500)
         .build();
     
-    let new_button = gtk::Button::builder().label("add").build();
+    let new_button = gtk::Button::builder()
+        .label("add")
+        .width_request(100)
+        .build();
 
     new_button.connect_clicked(
         glib::clone!(@weak text_view, @strong bib => move |_| {
@@ -140,8 +143,8 @@ fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
 
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
+        .min_content_width(1100)
         .min_content_height(500)
-        .min_content_width(1000)
         .child(&text_view)
         .build();
 
