@@ -140,7 +140,7 @@ fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
         .build();
     
     let new_button = gtk::Button::builder()
-        .label("add")
+        .label("Add")
         .width_request(100)
         .build();
 
