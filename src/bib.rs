@@ -6,7 +6,7 @@ use crate::util::mkdir;
 fn extract(text: String) -> [String; 5] {
     let mut v_bib: [String; 5] = Default::default();
 
-    let text = text.replace("\r", "").replace("\'", "").replace("\t", "").replace("\"", "");
+    let text = text.replace("\r", "").replace("\'", "").replace("\t", "").replace("\"", "").replace("\\", "");
     v_bib[4] = text.clone();
     let text = text.replace("@", "");
 
