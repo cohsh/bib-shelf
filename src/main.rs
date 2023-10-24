@@ -2,6 +2,7 @@ use std::process::Command;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::env;
+use std::path::Path;
 
 use gtk::prelude::*;
 use gtk::gio;
@@ -87,7 +88,15 @@ fn build_ui(application: &gtk::Application) {
         if let Some(item) = model.item(index as u32) {
             if let Some(paper) = item.downcast_ref::<Paper>() {
                 let pdf_path = paper.path();
-                println!("PDF path: {}", pdf_path);
+
+                let pdf_path_str = pdf_path.as_str();
+
+                if !Path::new(pdf_path_str).exists() {
+                    eprintln!("Error: File does not exist at {}", pdf_path_str);
+                    return;
+                }
+    
+                println!("PDF path: {}", pdf_path_str);
     
                 let result = if cfg!(target_os = "linux") {
                     if env::var("WSL_DISTRO_NAME").is_ok() {
