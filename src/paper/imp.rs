@@ -9,9 +9,9 @@ pub struct Paper {
     #[property(get, set)]
     year: RefCell<String>,
     #[property(get, set)]
-    title: RefCell<String>,
-    #[property(get, set)]
     author: RefCell<String>,
+    #[property(get, set)]
+    title: RefCell<String>,
     #[property(get, set)]
     path: RefCell<String>,
 }
@@ -20,8 +20,8 @@ impl Default for Paper {
     fn default() -> Self {
         Self {
             year: RefCell::new(String::new()),
-            title: RefCell::new(String::new()),
             author: RefCell::new(String::new()),
+            title: RefCell::new(String::new()),
             path: RefCell::new(String::new()),
         }
     }

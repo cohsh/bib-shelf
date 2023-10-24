@@ -25,15 +25,15 @@ fn extract(text: String) -> [String; 5] {
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
             v_bib[0] = (&tmp2).to_string();
         }
-        if item_re.contains("title") {
-            let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
-            let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[1] = shorten(&tmp2.to_string(), 100).to_string();
-        }
         if item_re.contains("author") {
             let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[2] = shorten(&tmp2.to_string(), 30).to_string();
+            v_bib[1] = shorten(&tmp2.to_string(), 30).to_string();
+        }
+        if item_re.contains("title") {
+            let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
+            let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
+            v_bib[2] = shorten(&tmp2.to_string(), 50).to_string();
         }
     }
     v_bib
