@@ -12,7 +12,7 @@ mod util;
 mod bib;
 
 use paper::Paper;
-use bib::{get_bib, get_bib_first};
+use bib::{get_bib, get_bib_first, Bib};
 use util::{mkdir, write};
 
 #[derive(Debug)]
@@ -31,23 +31,23 @@ impl Default for Shelf {
 }
 
 impl Shelf {
-    pub fn add_papers(&mut self, mut v_bib: Vec<[String; 5]>) {
+    pub fn add_papers(&mut self, mut v_bib: Vec<Bib>) {
         for v in v_bib.iter_mut(){
-            let dir = "papers/".to_string() + &v[3].clone();
+            let dir = "papers/".to_string() + v.identifier().unwrap_or(&String::new());
             mkdir(dir.clone());
-            let path_pdf = dir.clone() + "/" + &v[3].clone() + ".pdf";
+            let path_pdf = dir.clone() + "/" + v.identifier().unwrap_or(&String::new()) + ".pdf";
 
-            let paper = Paper::new(
-                v[0].clone(),
-                v[1].clone(),
-                v[2].clone(),
-                path_pdf,
-            );
+            if let Some(year) = v.year() {
+                if let Some(author) = v.author() {
+                    if let Some(title) = v.title() {
+                        let paper = Paper::new(year, author.clone(), title.clone(), path_pdf);
+                        self.model.append(&paper);
+                    }
+                }
+            }            
 
-            self.model.append(&paper);
-
-            let path_bib = dir + "/" + &v[3].clone() + ".bib";
-            write(path_bib, &v[4]);
+            let path_bib = dir + "/" + v.identifier().unwrap_or(&String::new()) + ".bib";
+            write(path_bib, v.text().unwrap_or(&String::new()));
         }
     }
 

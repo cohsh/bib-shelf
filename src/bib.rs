@@ -3,11 +3,122 @@ use regex::Regex;
 
 use crate::util::mkdir;
 
-fn extract(text: String) -> [String; 5] {
-    let mut v_bib: [String; 5] = Default::default();
+#[derive(Clone, Debug)]
+pub struct Bib {
+    year: Option<u64>,
+    author: Option<String>,
+    title: Option<String>,
+    identifier: Option<String>,
+    text: Option<String>,
+}
+
+impl Default for Bib {
+    fn default() -> Self {
+        Bib {
+            year: None,
+            author: None,
+            title: None,
+            identifier: None,
+            text: None,
+        }
+    }
+}
+
+impl Bib {
+    pub fn year(&self) -> Option<u64> {
+        self.year
+    }
+
+    pub fn author(&self) -> Option<&String> {
+        self.author.as_ref()
+    }
+
+    pub fn title(&self) -> Option<&String> {
+        self.title.as_ref()
+    }
+
+    pub fn identifier(&self) -> Option<&String> {
+        self.identifier.as_ref()
+    }
+
+    pub fn text(&self) -> Option<&String> {
+        self.text.as_ref()
+    }
+
+    pub fn set_year(&mut self, year: u64) {
+        self.year = Some(year);
+    }
+
+    pub fn set_author(&mut self, author: String) {
+        self.author = Some(author);
+    }
+
+    pub fn set_title(&mut self, title: String) {
+        self.title = Some(title);
+    }
+
+    pub fn set_identifier(&mut self, identifier: String) {
+        self.identifier = Some(identifier);
+    }
+
+    pub fn set_text(&mut self, text: String) {
+        self.text = Some(text);
+    }
+
+    pub fn is_not_empty(&self) -> bool {
+        self.year.filter(|&year| year != 0).is_some() &&
+        self.author.as_ref().filter(|author| !author.is_empty()).is_some() &&
+        self.title.as_ref().filter(|title| !title.is_empty()).is_some() &&
+        self.identifier.as_ref().filter(|identifier| !identifier.is_empty()).is_some() &&
+        self.text.as_ref().filter(|text| !text.is_empty()).is_some()
+    }
+}
+
+pub fn get_bib(text: String) -> Vec<Bib> {
+    let mut v_bibs: Vec<Bib> = Vec::new();
+
+    let mut v_string: Vec<&str> = text.split('@').collect();
+
+    for s in v_string.iter_mut(){
+
+        let text = "@".to_string() + s;
+        let bib = extract(text);
+
+        if bib.is_not_empty() {
+            v_bibs.push(bib);
+        }
+    }
+    v_bibs
+}
+
+pub fn get_bib_first() -> Vec<Bib> {
+    let mut v_bibs: Vec<Bib> = Vec::new();
+
+    mkdir("./papers".to_string());
+    let dirs = fs::read_dir("./papers").unwrap();
+
+    for dir_entry in dirs {
+        let dir_entry = dir_entry.unwrap();
+        let path = dir_entry.path();
+
+        let file_bib = path.join(format!("{}.bib", path.file_name().unwrap().to_str().unwrap()));
+        let text = fs::read_to_string(file_bib).expect("Unable to read file");
+        
+        let bib = extract(text);
+
+        if bib.is_not_empty() {
+            v_bibs.push(bib);
+        }
+    }
+    v_bibs
+}
+
+fn extract(text: String) -> Bib {
+    let mut bib = Bib::default();
 
     let text = text.replace("\r", "").replace("\'", "").replace("\t", "").replace("\"", "").replace("\\", "");
-    v_bib[4] = text.clone();
+    bib.set_text(text.clone());
+
     let text = text.replace("@", "");
 
     let mut v: Vec<&str> = text.split('\n').collect();
@@ -16,27 +127,28 @@ fn extract(text: String) -> [String; 5] {
     let tmp1 = Regex::new(r"^ *|,|\{|\}|@$").unwrap().replace_all(&tmp0, "");
     let tmp2 = Regex::new(r"(^article)").unwrap().replace_all(&tmp1, "${1}_");
     let tmp3 = Regex::new(r"([0-9]+)").unwrap().replace_all(&tmp2, "${1}_");
-    v_bib[3] = format!("{}", (&tmp3).to_string());
+    bib.set_identifier(format!("{}", (&tmp3).to_string()));
 
     for item in v.iter_mut(){
         let item_re = Regex::new(r"^ *|,$|\{|\}").unwrap().replace_all(item, "");
         if item_re.contains("year") {
             let tmp = Regex::new(r"year|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[0] = (&tmp2).to_string();
+            let tmp3: u64 = tmp2.parse().unwrap();
+            bib.set_year(tmp3);
         }
         if item_re.contains("author") {
             let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[1] = shorten(&tmp2.to_string(), 30).to_string();
+            bib.set_author(shorten(&tmp2.to_string(), 30).to_string());
         }
         if item_re.contains("title") {
             let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[2] = shorten(&tmp2.to_string(), 50).to_string();
+            bib.set_title(shorten(&tmp2.to_string(), 50).to_string());
         }
     }
-    v_bib
+    bib
 }
 
 fn shorten(s: &str, n_max: usize) -> String {
@@ -52,48 +164,4 @@ fn shorten(s: &str, n_max: usize) -> String {
         let result = format!("{:-width$}...", shortened, width = n_max - 3);
         result
     }
-}
-
-fn is_empty(v: [String; 5]) -> bool {
-    (v[0] != "") && (v[1] != "") && (v[2] != "") && (v[3] != "")
-}
-
-pub fn get_bib(text: String) -> Vec<[String; 5]> {
-    let mut v_bibs: Vec<[String; 5]> = Vec::new();
-
-    let mut v_string: Vec<&str> = text.split('@').collect();
-
-    for s in v_string.iter_mut(){
-
-        let text = "@".to_string() + s;
-        let v_bib: [String; 5] = extract(text);
-
-        if is_empty(v_bib.clone()) {
-            v_bibs.push(v_bib);
-        }
-    }
-    v_bibs
-}
-
-pub fn get_bib_first() -> Vec<[String; 5]> {
-    let mut v_bibs: Vec<[String; 5]> = Vec::new();
-
-    mkdir("./papers".to_string());
-    let dirs = fs::read_dir("./papers").unwrap();
-
-    for dir_entry in dirs {
-        let dir_entry = dir_entry.unwrap();
-        let path = dir_entry.path();
-
-        let file_bib = path.join(format!("{}.bib", path.file_name().unwrap().to_str().unwrap()));
-        let text = fs::read_to_string(file_bib).expect("Unable to read file");
-        
-        let v_bib: [String; 5] = extract(text);
-
-        if is_empty(v_bib.clone()) {
-            v_bibs.push(v_bib);
-        }
-    }
-
-    v_bibs
 }
