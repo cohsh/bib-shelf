@@ -28,15 +28,28 @@ fn extract(text: String) -> [String; 5] {
         if item_re.contains("title") {
             let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[1] = (&tmp2).to_string();
+            v_bib[1] = shorten(&tmp2.to_string(), 100).to_string();
         }
         if item_re.contains("author") {
             let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
             let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            v_bib[2] = (&tmp2).to_string();
+            v_bib[2] = shorten(&tmp2.to_string(), 30).to_string();
         }
     }
     v_bib
+}
+
+fn shorten(s: &str, n_max: usize) -> String {
+    assert!(n_max > 0, "n_max must be greater than or equal to 0");
+
+    let char_vec: Vec<char> = s.chars().collect();
+    if char_vec.len() <= n_max {
+        char_vec.into_iter().collect()
+    } else {
+        let shortened: String = s.chars().take(n_max).collect();
+        let result = format!("{}......", shortened);
+        result
+    }
 }
 
 fn is_empty(v: [String; 5]) -> bool {

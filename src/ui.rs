@@ -5,8 +5,8 @@ use gtk::prelude::*;
 pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
-        .spacing(10)
-        .homogeneous(true)
+        .spacing(20)
+        .homogeneous(false)
         .build();
 
     let title = gtk::Label::builder()
