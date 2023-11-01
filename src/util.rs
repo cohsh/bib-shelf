@@ -1,16 +1,16 @@
-use std::fs;
-use std::io::prelude::*;
+use std::fs::*;
+use std::io::{self, Write};
+use std::path::Path;
 
-pub fn write(filename: String, s: &String) {
-    let mut f = fs::File::create(filename).unwrap();
-
-    _ = f.write_all(s.as_bytes());
+pub fn write<P: AsRef<Path>>(filename: P, s: &str) -> io::Result<()> {
+    let mut f = File::create(filename)?;
+    f.write_all(s.as_bytes())?;
+    Ok(())
 }
 
-pub fn mkdir(filename: String) -> u8 {
-    match fs::create_dir(filename.clone()) {
-//        Err(e) => panic!("{}: {}", filename, e),
-        Err(_) => 1,
-        Ok(__) => 0,
+pub fn mkdir<P: AsRef<Path>>(filename: P) -> Result<(), io::Error> {
+    match create_dir(filename) {
+        Err(e) => Err(e),
+        Ok(_) => Ok(()),
     }
 }

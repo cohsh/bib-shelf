@@ -36,7 +36,10 @@ impl Shelf {
     pub fn add_papers(&mut self, mut v_bib: Vec<Bib>) {
         for v in v_bib.iter_mut(){
             let dir = "papers/".to_string() + v.identifier().unwrap_or(&String::new());
-            mkdir(dir.clone());
+            if let Err(e) = mkdir(dir.clone()) {
+                eprintln!("Failed to create directory {}: {}", dir, e);
+            }
+
             let path_pdf = dir.clone() + "/" + v.identifier().unwrap_or(&String::new()) + ".pdf";
 
             if let Some(year) = v.year() {
