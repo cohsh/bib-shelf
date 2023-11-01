@@ -35,7 +35,7 @@ impl Default for Shelf {
 impl Shelf {
     pub fn add_papers(&mut self, mut v_bib: Vec<Bib>) {
         for v in v_bib.iter_mut(){
-            let dir = "papers/".to_string() + v.identifier().unwrap_or(&String::new());
+            let dir = "library/".to_string() + v.identifier().unwrap_or(&String::new());
             if let Err(e) = mkdir(dir.clone()) {
                 eprintln!("Failed to create directory {}: {}", dir, e);
             }
@@ -52,7 +52,7 @@ impl Shelf {
             }            
 
             let path_bib = dir + "/" + v.identifier().unwrap_or(&String::new()) + ".bib";
-            write(path_bib, v.text().unwrap_or(&String::new()));
+            let _ = write(path_bib, v.text().unwrap_or(&String::new()));
         }
     }
 

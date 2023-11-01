@@ -94,8 +94,8 @@ pub fn get_bib(text: String) -> Vec<Bib> {
 pub fn get_bib_first() -> Vec<Bib> {
     let mut v_bibs: Vec<Bib> = Vec::new();
 
-    mkdir("./papers".to_string());
-    let dirs = fs::read_dir("./papers").unwrap();
+    let _ = mkdir("./library".to_string());
+    let dirs = fs::read_dir("./library").unwrap();
 
     for dir_entry in dirs {
         let dir_entry = dir_entry.unwrap();
