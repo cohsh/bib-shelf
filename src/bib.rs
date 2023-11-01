@@ -102,8 +102,15 @@ pub fn get_bib_first() -> Vec<Bib> {
         let path = dir_entry.path();
 
         let file_bib = path.join(format!("{}.bib", path.file_name().unwrap().to_str().unwrap()));
-        let text = fs::read_to_string(file_bib).expect("Unable to read file");
-        
+
+        let text = match fs::read_to_string(&file_bib) {
+            Ok(content) => content,
+            Err(e) => {
+                eprintln!("Error reading file {:?}: {}", file_bib, e);
+                continue;
+            }
+        };        
+    
         let bib = extract(text);
 
         if bib.is_not_empty() {
