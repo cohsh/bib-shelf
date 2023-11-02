@@ -3,7 +3,7 @@ use std::{
     cell::RefCell,
     rc::Rc,
     env,
-    path::Path,
+    path::PathBuf,
 };
 
 use gtk::{
@@ -37,16 +37,23 @@ impl Default for Shelf {
 }
 
 impl Shelf {
-    pub fn add_bibs(&mut self, mut bibs: Vec<Bib>) {
-        for bib in bibs.iter_mut(){
+    pub fn add_bibs(&mut self, bibs: Vec<Bib>) {
+        for bib in bibs.iter() {
             if let Some(identifier) = bib.identifier() {
-                let dir = format!("library/{}", identifier);
-                if let Err(e) = mkdir(&dir) {
-                    eprintln!("Failed to create directory {}: {}", dir, e);
+                let category = bib.category();
+
+                let mut dir_path = PathBuf::from("library");
+                if let Some(category) = category {
+                    dir_path = dir_path.join(category);
+                }
+                dir_path = dir_path.join(identifier);
+                
+                if let Err(e) = mkdir(&dir_path) {
+                    eprintln!("Failed to create directory {}: {}", dir_path.display(), e);
                     continue;
                 }
     
-                let path_pdf = format!("{}/{}.pdf", dir, identifier);
+                let path_pdf = dir_path.join(format!("{}.pdf", identifier));
     
                 if let (Some(year), Some(author), Some(title)) = (bib.year(), bib.author(), bib.title()) {
                     let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
@@ -56,8 +63,11 @@ impl Shelf {
                     eprintln!("Missing required fields for bib: {}", identifier);
                 }
     
-                let path_bib = format!("{}/{}.bib", dir, identifier);
-                let _ = write(&path_bib, bib.text().unwrap_or(&String::new()));
+                let path_bib = dir_path.join(format!("{}.bib", identifier));
+                match write(&path_bib, bib.text().unwrap_or(&String::new())) {
+                    Ok(_) => println!("Successfully wrote to {:?}", path_bib),
+                    Err(e) => eprintln!("Failed to write to {:?}: {}", path_bib, e),
+                };
             } else {
                 eprintln!("Missing identifier for bib");
             }
@@ -99,18 +109,17 @@ fn build_ui(application: &gtk::Application) {
         if let Some(item) = model.item(index as u32) {
             if let Some(spine) = item.downcast_ref::<Spine>() {
                 let pdf_path = spine.path();
-                let pdf_path_str = pdf_path.as_str();
 
-                if !Path::new(pdf_path_str).exists() {
-                    eprintln!("Error: File does not exist at {}", pdf_path_str);
+                if !pdf_path.exists() {
+                    eprintln!("Error: File does not exist at {:?}", pdf_path);
                     return;
                 }
     
-                println!("PDF path: {}", pdf_path_str);
+                println!("PDF path: {:?}", pdf_path);
     
                 let result = if cfg!(target_os = "linux") {
                     if env::var("WSL_DISTRO_NAME").is_ok() {
-                        Command::new("powershell.exe").args(&["/c", "start", &pdf_path]).spawn()
+                        Command::new("powershell.exe").args(&["/c", "start", pdf_path.to_str().expect("Invalid Unicode in file path")]).spawn()
                     } else {
                         Command::new("xdg-open").arg(pdf_path).spawn()
                     }

@@ -2,7 +2,11 @@ use gtk::{
     glib::{self, prelude::*, Properties},
     subclass::prelude::*,
 };
-use std::cell::{Cell, RefCell};
+use std::{
+    path::PathBuf,
+    cell::{Cell, RefCell},
+};
+
 
 #[derive(Debug, Properties)]
 #[properties(wrapper_type = super::Spine)]
@@ -14,7 +18,7 @@ pub struct Spine {
     #[property(get, set)]
     title: RefCell<String>,
     #[property(get, set)]
-    path: RefCell<String>,
+    path: RefCell<PathBuf>,
 }
 
 impl Default for Spine {
@@ -23,7 +27,7 @@ impl Default for Spine {
             year: Cell::new(0),
             author: RefCell::new(String::new()),
             title: RefCell::new(String::new()),
-            path: RefCell::new(String::new()),
+            path: RefCell::new(PathBuf::new()),
         }
     }
 }
