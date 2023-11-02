@@ -1,14 +1,14 @@
-mod imp;
-use gtk;
 use gtk::glib;
 
+mod imp;
+
 glib::wrapper! {
-    pub struct Paper(ObjectSubclass<imp::Paper>);
+    pub struct Spine(ObjectSubclass<imp::Spine>);
 }
 
-impl Paper {
+impl Spine {
     pub fn new(year: u64, author: String, title: String, path: String) -> Self {
-        let obj = glib::Object::new::<Paper>();
+        let obj = glib::Object::new::<Spine>();
         obj.set_year(year);
         obj.set_author(author);
         obj.set_title(title);

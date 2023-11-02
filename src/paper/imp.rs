@@ -1,11 +1,12 @@
-use gtk::glib;
-use gtk::glib::{prelude::*, Properties};
-use gtk::subclass::prelude::*;
+use gtk::{
+    glib::{self, prelude::*, Properties},
+    subclass::prelude::*,
+};
 use std::cell::{Cell, RefCell};
 
 #[derive(Debug, Properties)]
-#[properties(wrapper_type = super::Paper)]
-pub struct Paper {
+#[properties(wrapper_type = super::Spine)]
+pub struct Spine {
     #[property(get, set)]
     year: Cell<u64>,
     #[property(get, set)]
@@ -16,7 +17,7 @@ pub struct Paper {
     path: RefCell<String>,
 }
 
-impl Default for Paper {
+impl Default for Spine {
     fn default() -> Self {
         Self {
             year: Cell::new(0),
@@ -28,13 +29,13 @@ impl Default for Paper {
 }
 
 #[glib::object_subclass]
-impl ObjectSubclass for Paper {
-    const NAME: &'static str = "Paper";
-    type Type = super::Paper;
+impl ObjectSubclass for Spine {
+    const NAME: &'static str = "Spine";
+    type Type = super::Spine;
     type ParentType = glib::Object;
 }
 
-impl ObjectImpl for Paper {
+impl ObjectImpl for Spine {
     fn properties() -> &'static [glib::ParamSpec] {
         Self::derived_properties()
     }
