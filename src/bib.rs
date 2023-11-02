@@ -98,7 +98,11 @@ pub fn get_bibs(text: String) -> Vec<Bib> {
 pub fn get_bibs_first() -> Vec<Bib> {
     let mut bibs: Vec<Bib> = Vec::new();
 
-    let _ = mkdir("./library".to_string());
+    match mkdir("./library".to_string()) {
+        Ok(_) => println!("Directory created successfully."),
+        Err(e) => eprintln!("Failed to create directory: {:?}", e),
+    };
+    
     // Ref. http://exlight.net/tutorial/bibtex-category.html
     let subdirs = [
         "article", "inproceedings", "phdthesis", "masterthesis", "book", "incollection",
@@ -191,6 +195,7 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
 
     let identifier_pattern = Regex::new(r"@article\{(\w*)")?;
     if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern, 2) {
+        println!("{:?}", identifier);
         bib.set_identifier(identifier.to_string());
     }
 
