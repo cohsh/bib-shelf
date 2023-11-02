@@ -50,7 +50,6 @@ impl Shelf {
                 
                 if let Err(e) = mkdir(&dir_path) {
                     eprintln!("Failed to create directory {}: {}", dir_path.display(), e);
-                    continue;
                 }
     
                 let path_pdf = dir_path.join(format!("{}.pdf", identifier));

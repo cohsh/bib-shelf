@@ -198,12 +198,12 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
         bib.set_year(year);
     }
 
-    let author_pattern = Regex::new(r"author\s*=\s*\{*([^,\n]+)\s*\}*")?;
+    let author_pattern = Regex::new(r"author\s*=\s*\{*([^\n]+)\s*\}*\n")?;
     if let Some(author) = extract_field(&cleaned_text, &author_pattern, 1) {
         bib.set_author(clean_pattern.replace_all(&author, "").trim().to_string());
     }
 
-    let title_pattern = Regex::new(r"title\s*=\s*\{*([^,\n]+)\s*\}*")?;
+    let title_pattern = Regex::new(r"title\s*=\s*\{*([^\n]+)\s*\}*\n")?;
     if let Some(title) = extract_field(&cleaned_text, &title_pattern, 1) {
         bib.set_title(clean_pattern.replace_all(&title, "").trim().to_string());
     }
