@@ -163,8 +163,6 @@ fn build_ui(application: &gtk::Application) {
     vbox.append(&bib_label);
     vbox.append(&input_box(shelf));
 
-//    window.set_child(Some(&vbox));
-
     let tab_label_article = gtk::Label::new(Some("article"));
     notebook.append_page(&vbox, Some(&tab_label_article));
 
