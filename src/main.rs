@@ -18,7 +18,7 @@ mod util;
 mod bib;
 
 use spine::Spine;
-use bib::{get_bib, get_bib_first, Bib};
+use bib::{get_bibs, get_bibs_first, Bib};
 use util::{mkdir, write};
 
 #[derive(Debug)]
@@ -37,26 +37,26 @@ impl Default for Shelf {
 }
 
 impl Shelf {
-    pub fn add_papers(&mut self, mut v_bib: Vec<Bib>) {
-        for v in v_bib.iter_mut(){
-            let dir = "library/".to_string() + v.identifier().unwrap_or(&String::new());
+    pub fn add_bibs(&mut self, mut bibs: Vec<Bib>) {
+        for bib in bibs.iter_mut(){
+            let dir = "library/".to_string() + bib.identifier().unwrap_or(&String::new());
             if let Err(e) = mkdir(dir.clone()) {
                 eprintln!("Failed to create directory {}: {}", dir, e);
             }
 
-            let path_pdf = dir.clone() + "/" + v.identifier().unwrap_or(&String::new()) + ".pdf";
+            let path_pdf = dir.clone() + "/" + bib.identifier().unwrap_or(&String::new()) + ".pdf";
 
-            if let Some(year) = v.year() {
-                if let Some(author) = v.author() {
-                    if let Some(title) = v.title() {
-                        let paper = Spine::new(year, author.clone(), title.clone(), path_pdf);
-                        self.model.append(&paper);
+            if let Some(year) = bib.year() {
+                if let Some(author) = bib.author() {
+                    if let Some(title) = bib.title() {
+                        let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
+                        self.model.append(&spine);
                     }
                 }
             }            
 
-            let path_bib = dir + "/" + v.identifier().unwrap_or(&String::new()) + ".bib";
-            let _ = write(path_bib, v.text().unwrap_or(&String::new()));
+            let path_bib = dir + "/" + bib.identifier().unwrap_or(&String::new()) + ".bib";
+            let _ = write(path_bib, bib.text().unwrap_or(&String::new()));
         }
     }
 
@@ -80,22 +80,21 @@ fn build_ui(application: &gtk::Application) {
 
     vbox.append(&item_name_box());
 
-    let mut bib = Shelf::default();
+    let mut shelf = Shelf::default();
 
     let list_box = gtk::ListBox::new();
-    list_box.bind_model(Some(bib.model()), |item| {
-        let paper = item.downcast_ref::<Spine>().unwrap();
-        ui::display_ui(paper).upcast::<gtk::Widget>()
+    list_box.bind_model(Some(shelf.model()), |item| {
+        let spine = item.downcast_ref::<Spine>().unwrap();
+        ui::display_ui(spine).upcast::<gtk::Widget>()
     });
 
-    let model = bib.model();
+    let model = shelf.model();
 
     list_box.connect_row_activated(glib::clone!(@weak model => move |_list_box, row| {
         let index = row.index();
         if let Some(item) = model.item(index as u32) {
-            if let Some(paper) = item.downcast_ref::<Spine>() {
-                let pdf_path = paper.path();
-
+            if let Some(spine) = item.downcast_ref::<Spine>() {
+                let pdf_path = spine.path();
                 let pdf_path_str = pdf_path.as_str();
 
                 if !Path::new(pdf_path_str).exists() {
@@ -135,10 +134,10 @@ fn build_ui(application: &gtk::Application) {
 
     vbox.append(&scrolled_window);
 
-    let v_bib = get_bib_first();
-    bib.add_papers(v_bib);
+    let bibs = get_bibs_first();
+    shelf.add_bibs(bibs);
 
-    let bib = Rc::new(RefCell::new(bib));
+    let shelf = Rc::new(RefCell::new(shelf));
 
     let bib_label = gtk::Label::builder()
         .label("New bib(s)")
@@ -146,13 +145,13 @@ fn build_ui(application: &gtk::Application) {
         .build();
 
     vbox.append(&bib_label);
-    vbox.append(&input_box(bib));
+    vbox.append(&input_box(shelf));
 
     window.set_child(Some(&vbox));
     window.show();
 }
 
-fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
+fn input_box(shelf: Rc<RefCell<Shelf>>) -> gtk::Box {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .build();
@@ -169,14 +168,14 @@ fn input_box(bib: Rc<RefCell<Shelf>>) -> gtk::Box {
         .build();
 
     new_button.connect_clicked(
-        glib::clone!(@weak text_view, @strong bib => move |_| {
+        glib::clone!(@weak text_view, @strong shelf => move |_| {
             let buffer = text_view.buffer();
             let start = buffer.start_iter();
             let end = buffer.end_iter();
             let t = buffer.text(&start, &end, false).to_string();
 
-            let v_bib = get_bib(t);
-            bib.borrow_mut().add_papers(v_bib);
+            let bibs = get_bibs(t);
+            shelf.borrow_mut().add_bibs(bibs);
         }),
     );
 

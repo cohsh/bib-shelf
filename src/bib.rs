@@ -63,8 +63,8 @@ impl Bib {
     }
 }
 
-pub fn get_bib(text: String) -> Vec<Bib> {
-    let mut v_bibs: Vec<Bib> = Vec::new();
+pub fn get_bibs(text: String) -> Vec<Bib> {
+    let mut bibs: Vec<Bib> = Vec::new();
 
     let mut v_string: Vec<&str> = text.split('@').collect();
 
@@ -75,17 +75,17 @@ pub fn get_bib(text: String) -> Vec<Bib> {
 
         if let Ok(bib) = bib {
             if bib.is_not_empty() {
-                v_bibs.push(bib);
+                bibs.push(bib);
             }    
         } else {
             eprintln!("Error while extracting Bib: {:?}", bib);
         }
     }
-    v_bibs
+    bibs
 }
 
-pub fn get_bib_first() -> Vec<Bib> {
-    let mut v_bibs: Vec<Bib> = Vec::new();
+pub fn get_bibs_first() -> Vec<Bib> {
+    let mut bibs: Vec<Bib> = Vec::new();
 
     let _ = mkdir("./library".to_string());
     let dirs = fs::read_dir("./library").unwrap();
@@ -108,13 +108,13 @@ pub fn get_bib_first() -> Vec<Bib> {
 
         if let Ok(bib) = bib {
             if bib.is_not_empty() {
-                v_bibs.push(bib);
+                bibs.push(bib);
             }    
         } else {
             eprintln!("Error while extracting Bib: {:?}", bib);
         }
     }
-    v_bibs
+    bibs
 }
 
 fn extract_field<'t>(text: &'t str, pattern: &Regex) -> Option<&'t str> {

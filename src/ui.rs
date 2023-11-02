@@ -3,7 +3,7 @@ use gtk;
 use gtk::prelude::*;
 use std::path::Path;
 
-pub fn display_ui(paper: &Spine) -> impl IsA<gtk::Widget> {
+pub fn display_ui(spine: &Spine) -> impl IsA<gtk::Widget> {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .spacing(20)
@@ -13,7 +13,7 @@ pub fn display_ui(paper: &Spine) -> impl IsA<gtk::Widget> {
     let year = gtk::Label::builder()
         .halign(gtk::Align::Start)
         .build();
-    paper
+    spine
         .bind_property("year", &year, "label")
         .sync_create()
         .build();
@@ -21,7 +21,7 @@ pub fn display_ui(paper: &Spine) -> impl IsA<gtk::Widget> {
     let author = gtk::Label::builder()
         .halign(gtk::Align::Start)
         .build();
-    paper
+    spine
         .bind_property("author", &author, "label")
         .sync_create()
         .build();
@@ -29,7 +29,7 @@ pub fn display_ui(paper: &Spine) -> impl IsA<gtk::Widget> {
     let title = gtk::Label::builder()
         .halign(gtk::Align::Start)
         .build();
-    paper
+    spine
         .bind_property("title", &title, "label")
         .sync_create()
         .build();
@@ -40,7 +40,7 @@ pub fn display_ui(paper: &Spine) -> impl IsA<gtk::Widget> {
     hbox.append(&author);
     hbox.append(&title);
 
-    let path_str = paper.path();
+    let path_str = spine.path();
     let path = Path::new(&path_str);
 
     if path.is_file() {
