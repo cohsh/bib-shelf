@@ -39,26 +39,30 @@ impl Default for Shelf {
 impl Shelf {
     pub fn add_bibs(&mut self, mut bibs: Vec<Bib>) {
         for bib in bibs.iter_mut(){
-            let dir = "library/".to_string() + bib.identifier().unwrap_or(&String::new());
-            if let Err(e) = mkdir(dir.clone()) {
-                eprintln!("Failed to create directory {}: {}", dir, e);
-            }
-
-            let path_pdf = dir.clone() + "/" + bib.identifier().unwrap_or(&String::new()) + ".pdf";
-
-            if let Some(year) = bib.year() {
-                if let Some(author) = bib.author() {
-                    if let Some(title) = bib.title() {
-                        let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
-                        self.model.append(&spine);
-                    }
+            if let Some(identifier) = bib.identifier() {
+                let dir = format!("library/{}", identifier);
+                if let Err(e) = mkdir(&dir) {
+                    eprintln!("Failed to create directory {}: {}", dir, e);
+                    continue;
                 }
-            }            
-
-            let path_bib = dir + "/" + bib.identifier().unwrap_or(&String::new()) + ".bib";
-            let _ = write(path_bib, bib.text().unwrap_or(&String::new()));
+    
+                let path_pdf = format!("{}/{}.pdf", dir, identifier);
+    
+                if let (Some(year), Some(author), Some(title)) = (bib.year(), bib.author(), bib.title()) {
+                    let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
+                    self.model.append(&spine);
+                    println!("Identifier: {}", identifier); // ここで識別子を表示
+                } else {
+                    eprintln!("Missing required fields for bib: {}", identifier);
+                }
+    
+                let path_bib = format!("{}/{}.bib", dir, identifier);
+                let _ = write(&path_bib, bib.text().unwrap_or(&String::new()));
+            } else {
+                eprintln!("Missing identifier for bib");
+            }
         }
-    }
+    }    
 
     pub fn model(&self) -> &gio::ListStore {
         &self.model
