@@ -66,11 +66,7 @@ impl Bib {
 
     pub fn is_not_empty(&self) -> bool {
         self.category.as_ref().filter(|category| !category.is_empty()).is_some() &&
-        self.identifier.as_ref().filter(|identifier| !identifier.is_empty()).is_some() &&
-        self.year.filter(|&year| year != 0).is_some() &&
-        self.author.as_ref().filter(|author| !author.is_empty()).is_some() &&
-        self.title.as_ref().filter(|title| !title.is_empty()).is_some() &&
-        self.text.as_ref().filter(|text| !text.is_empty()).is_some()
+        self.identifier.as_ref().filter(|identifier| !identifier.is_empty()).is_some()
     }
 }
 
@@ -80,11 +76,12 @@ pub fn get_bibs(text: String) -> Vec<Bib> {
     let mut v_string: Vec<&str> = text.split('@').collect();
 
     for s in v_string.iter_mut(){
-
         let text = "@".to_string() + s;
+
         let bib = extract(text);
 
         if let Ok(bib) = bib {
+            println!("{:?}", bib.year());
             if bib.is_not_empty() {
                 bibs.push(bib);
             }    
@@ -102,7 +99,7 @@ pub fn get_bibs_first() -> Vec<Bib> {
         Ok(_) => println!("Directory created successfully."),
         Err(e) => eprintln!("Failed to create directory: {:?}", e),
     };
-    
+
     // Ref. http://exlight.net/tutorial/bibtex-category.html
     let subdirs = [
         "article", "inproceedings", "phdthesis", "masterthesis", "book", "incollection",
@@ -188,31 +185,31 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
         r"proceedings|techreport|unpublished|misc)\{(\S*)"
     ))?;
 
+    let clean_pattern = Regex::new(r"\{|\}|,")?;
+
     if let Some(category) = extract_field(&cleaned_text, &identifier_pattern, 1) {
-        bib.set_category(category.to_string());
+        bib.set_category(clean_pattern.replace_all(&category, "").to_string());
     }
 
 
-    let identifier_pattern = Regex::new(r"@article\{(\w*)")?;
     if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern, 2) {
-        println!("{:?}", identifier);
-        bib.set_identifier(identifier.to_string());
+        bib.set_identifier(clean_pattern.replace_all(&identifier, "").to_string());
     }
 
-    let year_pattern = Regex::new(r"year *= *([0-9]+)")?;
+    let year_pattern = Regex::new(r"year\s*=\s*\{*\s*([0-9]+)\s*\}*")?;
     if let Some(year_str) = extract_field(&cleaned_text, &year_pattern, 1) {
         let year = u64::from_str(year_str)?;
         bib.set_year(year);
     }
 
-    let author_pattern = Regex::new(r"author *= *([^,\n]+)")?;
+    let author_pattern = Regex::new(r"author\s*=\s*\{*([^,\n]+)\s*\}*")?;
     if let Some(author) = extract_field(&cleaned_text, &author_pattern, 1) {
-        bib.set_author(author.trim().to_string());
+        bib.set_author(clean_pattern.replace_all(&author, "").trim().to_string());
     }
 
-    let title_pattern = Regex::new(r"title *= *([^,\n]+)")?;
+    let title_pattern = Regex::new(r"title\s*=\s*\{*([^,\n]+)\s*\}*")?;
     if let Some(title) = extract_field(&cleaned_text, &title_pattern, 1) {
-        bib.set_title(title.trim().to_string());
+        bib.set_title(clean_pattern.replace_all(&title, "").trim().to_string());
     }
 
     Ok(bib)
