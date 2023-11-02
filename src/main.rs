@@ -188,7 +188,6 @@ fn input_box(shelf: Rc<RefCell<Shelf>>) -> gtk::Box {
             let t = buffer.text(&start, &end, false).to_string();
 
             let bibs = get_bibs(t);
-            println!("{:?}", bibs);
             shelf.borrow_mut().add_bibs(bibs);
         }),
     );

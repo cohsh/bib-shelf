@@ -120,13 +120,9 @@ pub fn get_bibs_first() -> Vec<Bib> {
                     Err(e) => {
                         eprintln!("Error reading directory entry: {}", e);
                         continue;
-                    }    
+                    }
                 };
                 let path = dir_entry.path();
-
-                if path.is_dir() {
-                    continue;
-                }
 
                 let file_stem = match path.file_stem().and_then(|s| s.to_str()) {
                     Some(stem) => stem,
@@ -136,7 +132,7 @@ pub fn get_bibs_first() -> Vec<Bib> {
                     }
                 };
 
-                let file_bib = Path::new(&dir_path).join(format!("{}.bib", file_stem));
+                let file_bib = path.join(format!("{}.bib", file_stem));
 
                 let text = match fs::read_to_string(&file_bib) {
                     Ok(content) => content,
