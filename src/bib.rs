@@ -156,6 +156,7 @@ pub fn get_bibs_first() -> Vec<Bib> {
             eprintln!("Error reading directory {}: No such directory", dir_path);
         }
     }
+    bibs.sort_by(|a, b| a.year().cmp(&b.year()));
     bibs
 }
 
