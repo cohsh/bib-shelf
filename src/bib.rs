@@ -162,8 +162,8 @@ pub fn get_bibs_first() -> Vec<Bib> {
     bibs
 }
 
-fn extract_field<'t>(text: &'t str, pattern: &Regex) -> Option<&'t str> {
-    pattern.captures(text).and_then(|cap| cap.get(1).map(|m| m.as_str()))
+fn extract_field<'t>(text: &'t str, pattern: &Regex, capture_group_index: usize) -> Option<&'t str> {
+    pattern.captures(text).and_then(|cap| cap.get(capture_group_index).map(|m| m.as_str()))
 }
 
 fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
@@ -178,33 +178,35 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
 
     bib.set_text(cleaned_text.clone());
 
-    let category_pattern = Regex::new(concat!(
-        r"@(article|inproceedings|phdthesis|masterthesis|",
+    let identifier_pattern = Regex::new(concat!(
+        r"@(?i)(article|inproceedings|phdthesis|masterthesis|",
         r"book|incollection|inbook|booklet|manual|",
-        r"proceedings|techreport|unpublished|misc)$"
+        r"proceedings|techreport|unpublished|misc)\{(\S*)"
     ))?;
-    if let Some(category) = extract_field(&cleaned_text, &category_pattern) {
+
+    if let Some(category) = extract_field(&cleaned_text, &identifier_pattern, 1) {
         bib.set_category(category.to_string());
     }
 
+
     let identifier_pattern = Regex::new(r"@article\{(\w*)")?;
-    if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern) {
+    if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern, 2) {
         bib.set_identifier(identifier.to_string());
     }
 
     let year_pattern = Regex::new(r"year *= *([0-9]+)")?;
-    if let Some(year_str) = extract_field(&cleaned_text, &year_pattern) {
+    if let Some(year_str) = extract_field(&cleaned_text, &year_pattern, 1) {
         let year = u64::from_str(year_str)?;
         bib.set_year(year);
     }
 
     let author_pattern = Regex::new(r"author *= *([^,\n]+)")?;
-    if let Some(author) = extract_field(&cleaned_text, &author_pattern) {
+    if let Some(author) = extract_field(&cleaned_text, &author_pattern, 1) {
         bib.set_author(author.trim().to_string());
     }
 
     let title_pattern = Regex::new(r"title *= *([^,\n]+)")?;
-    if let Some(title) = extract_field(&cleaned_text, &title_pattern) {
+    if let Some(title) = extract_field(&cleaned_text, &title_pattern, 1) {
         bib.set_title(title.trim().to_string());
     }
 
