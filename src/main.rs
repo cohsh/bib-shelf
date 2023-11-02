@@ -86,6 +86,10 @@ fn main() {
 
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
+
+    let notebook = gtk::Notebook::new();
+    window.set_child(Some(&notebook));
+
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
     window.set_title(Some("Bib Shelf"));
@@ -159,7 +163,11 @@ fn build_ui(application: &gtk::Application) {
     vbox.append(&bib_label);
     vbox.append(&input_box(shelf));
 
-    window.set_child(Some(&vbox));
+//    window.set_child(Some(&vbox));
+
+    let tab_label_article = gtk::Label::new(Some("article"));
+    notebook.append_page(&vbox, Some(&tab_label_article));
+
     window.show();
 }
 
