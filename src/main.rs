@@ -1,19 +1,23 @@
-use std::process::Command;
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::env;
-use std::path::Path;
+use std::{
+    process::Command,
+    cell::RefCell,
+    rc::Rc,
+    env,
+    path::Path,
+};
 
-use gtk::prelude::*;
-use gtk::gio;
-use gtk::glib;
+use gtk::{
+    prelude::*,
+    gio,
+    glib,
+};
 
-mod paper;
+mod spine;
 mod ui;
 mod util;
 mod bib;
 
-use paper::Paper;
+use spine::Spine;
 use bib::{get_bib, get_bib_first, Bib};
 use util::{mkdir, write};
 
@@ -24,7 +28,7 @@ pub struct Shelf {
 
 impl Default for Shelf {
     fn default() -> Self {
-        let model = gio::ListStore::new::<Paper>();
+        let model = gio::ListStore::new::<Spine>();
 
         Self {
             model,
@@ -45,7 +49,7 @@ impl Shelf {
             if let Some(year) = v.year() {
                 if let Some(author) = v.author() {
                     if let Some(title) = v.title() {
-                        let paper = Paper::new(year, author.clone(), title.clone(), path_pdf);
+                        let paper = Spine::new(year, author.clone(), title.clone(), path_pdf);
                         self.model.append(&paper);
                     }
                 }
@@ -80,7 +84,7 @@ fn build_ui(application: &gtk::Application) {
 
     let list_box = gtk::ListBox::new();
     list_box.bind_model(Some(bib.model()), |item| {
-        let paper = item.downcast_ref::<Paper>().unwrap();
+        let paper = item.downcast_ref::<Spine>().unwrap();
         ui::display_ui(paper).upcast::<gtk::Widget>()
     });
 
@@ -89,7 +93,7 @@ fn build_ui(application: &gtk::Application) {
     list_box.connect_row_activated(glib::clone!(@weak model => move |_list_box, row| {
         let index = row.index();
         if let Some(item) = model.item(index as u32) {
-            if let Some(paper) = item.downcast_ref::<Paper>() {
+            if let Some(paper) = item.downcast_ref::<Spine>() {
                 let pdf_path = paper.path();
 
                 let pdf_path_str = pdf_path.as_str();

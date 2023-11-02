@@ -1,9 +1,9 @@
-use crate::Paper;
+use crate::Spine;
 use gtk;
 use gtk::prelude::*;
 use std::path::Path;
 
-pub fn display_ui(paper: &Paper) -> impl IsA<gtk::Widget> {
+pub fn display_ui(paper: &Spine) -> impl IsA<gtk::Widget> {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .spacing(20)

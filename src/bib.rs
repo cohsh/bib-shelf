@@ -1,30 +1,23 @@
 use std::fs;
 use regex::Regex;
+use std::str::FromStr;
 
 use crate::util::mkdir;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Bib {
+    identifier: Option<String>,
     year: Option<u64>,
     author: Option<String>,
     title: Option<String>,
-    identifier: Option<String>,
     text: Option<String>,
 }
 
-impl Default for Bib {
-    fn default() -> Self {
-        Bib {
-            year: None,
-            author: None,
-            title: None,
-            identifier: None,
-            text: None,
-        }
-    }
-}
-
 impl Bib {
+    pub fn identifier(&self) -> Option<&String> {
+        self.identifier.as_ref()
+    }
+
     pub fn year(&self) -> Option<u64> {
         self.year
     }
@@ -35,10 +28,6 @@ impl Bib {
 
     pub fn title(&self) -> Option<&String> {
         self.title.as_ref()
-    }
-
-    pub fn identifier(&self) -> Option<&String> {
-        self.identifier.as_ref()
     }
 
     pub fn text(&self) -> Option<&String> {
@@ -84,8 +73,12 @@ pub fn get_bib(text: String) -> Vec<Bib> {
         let text = "@".to_string() + s;
         let bib = extract(text);
 
-        if bib.is_not_empty() {
-            v_bibs.push(bib);
+        if let Ok(bib) = bib {
+            if bib.is_not_empty() {
+                v_bibs.push(bib);
+            }    
+        } else {
+            eprintln!("Error while extracting Bib: {:?}", bib);
         }
     }
     v_bibs
@@ -113,62 +106,68 @@ pub fn get_bib_first() -> Vec<Bib> {
     
         let bib = extract(text);
 
-        if bib.is_not_empty() {
-            v_bibs.push(bib);
+        if let Ok(bib) = bib {
+            if bib.is_not_empty() {
+                v_bibs.push(bib);
+            }    
+        } else {
+            eprintln!("Error while extracting Bib: {:?}", bib);
         }
     }
     v_bibs
 }
 
-fn extract(text: String) -> Bib {
+fn extract_field<'t>(text: &'t str, pattern: &Regex) -> Option<&'t str> {
+    pattern.captures(text).and_then(|cap| cap.get(1).map(|m| m.as_str()))
+}
+
+fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
     let mut bib = Bib::default();
 
-    let text = text.replace("\r", "").replace("\'", "").replace("\t", "").replace("\"", "").replace("\\", "");
-    bib.set_text(text.clone());
+    let cleaned_text = text
+        .replace("\r", "")
+        .replace("\'", "")
+        .replace("\t", "")
+        .replace("\"", "")
+        .replace("\\", "");
 
-    let text = text.replace("@", "");
+    bib.set_text(cleaned_text.clone());
 
-    let mut v: Vec<&str> = text.split('\n').collect();
-
-    let tmp0 = format!("{}", v[0]);
-    let tmp1 = Regex::new(r"^ *|,|\{|\}|@$").unwrap().replace_all(&tmp0, "");
-    let tmp2 = Regex::new(r"(^article)").unwrap().replace_all(&tmp1, "${1}_");
-    let tmp3 = Regex::new(r"([0-9]+)").unwrap().replace_all(&tmp2, "${1}_");
-    bib.set_identifier(format!("{}", (&tmp3).to_string()));
-
-    for item in v.iter_mut(){
-        let item_re = Regex::new(r"^ *|,$|\{|\}").unwrap().replace_all(item, "");
-        if item_re.contains("year") {
-            let tmp = Regex::new(r"year|=").unwrap().replace_all(&item_re, "");
-            let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            let tmp3: u64 = tmp2.parse().unwrap();
-            bib.set_year(tmp3);
-        }
-        if item_re.contains("author") {
-            let tmp = Regex::new(r"author|=").unwrap().replace_all(&item_re, "");
-            let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            bib.set_author(shorten(&tmp2.to_string(), 30).to_string());
-        }
-        if item_re.contains("title") {
-            let tmp = Regex::new(r"title|=").unwrap().replace_all(&item_re, "");
-            let tmp2 = Regex::new(r"^ *").unwrap().replace_all(&tmp, "");
-            bib.set_title(shorten(&tmp2.to_string(), 50).to_string());
-        }
+    let identifier_pattern = Regex::new(r"@(article[0-9]+)_?")?;
+    if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern) {
+        bib.set_identifier(identifier.to_string());
     }
-    bib
+
+    let year_pattern = Regex::new(r"year *= *([0-9]+)")?;
+    if let Some(year_str) = extract_field(&cleaned_text, &year_pattern) {
+        let year = u64::from_str(year_str)?;
+        bib.set_year(year);
+    }
+
+    let author_pattern = Regex::new(r"author *= *([^,\n]+)")?;
+    if let Some(author) = extract_field(&cleaned_text, &author_pattern) {
+        bib.set_author(author.trim().to_string());
+    }
+
+    let title_pattern = Regex::new(r"title *= *([^,\n]+)")?;
+    if let Some(title) = extract_field(&cleaned_text, &title_pattern) {
+        bib.set_title(title.trim().to_string());
+    }
+
+    Ok(bib)
 }
 
 fn shorten(s: &str, n_max: usize) -> String {
-    assert!(n_max > 0, "n_max must be greater than or equal to 0");
+    if n_max == 0 {
+        return String::new();
+    } else if n_max <= 3 {
+        return s.chars().take(n_max).collect();
+    }
 
-    let char_vec: Vec<char> = s.chars().collect();
-    if char_vec.len() <= n_max {
-        let tmp: String = char_vec.into_iter().collect();
-        let result = format!("{:-width$}", tmp, width = n_max);
-        result
+    if s.chars().count() <= n_max {
+        s.to_string()
     } else {
-        let shortened: String = s.chars().take(n_max).collect();
-        let result = format!("{:-width$}...", shortened, width = n_max - 3);
-        result
+        let shortened: String = s.chars().take(n_max - 3).collect();
+        format!("{}...", shortened)
     }
 }
