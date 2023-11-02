@@ -1,6 +1,7 @@
 use std::fs;
 use regex::Regex;
 use std::str::FromStr;
+use std::path::Path;
 
 use crate::util::mkdir;
 
@@ -88,30 +89,64 @@ pub fn get_bibs_first() -> Vec<Bib> {
     let mut bibs: Vec<Bib> = Vec::new();
 
     let _ = mkdir("./library".to_string());
-    let dirs = fs::read_dir("./library").unwrap();
+    // Ref. http://exlight.net/tutorial/bibtex-category.html
+    let subdirs = [
+        "article", "inproceedings", "phdthesis", "masterthesis", "book", "incollection",
+        "inbook", "booklet", "manual", "proceedings", "techreport", "unpublished", "misc",
+        ];
 
-    for dir_entry in dirs {
-        let dir_entry = dir_entry.unwrap();
-        let path = dir_entry.path();
+    for subdir in subdirs.iter() {
+        let dir_path = format!("./library/{}", subdir);
+        match mkdir(Path::new(&dir_path)) {
+            Ok(_) => println!("Made directory {}", dir_path),
+            Err(e) => eprintln!("Error mkdir {:?}: {}", dir_path, e),
+        }
 
-        let file_bib = path.join(format!("{}.bib", path.file_name().unwrap().to_str().unwrap()));
+        if let Ok(dirs) = fs::read_dir(&dir_path) {
+            for dir_entry in dirs {
+                let dir_entry = match dir_entry {
+                    Ok(entry) => entry,
+                    Err(e) => {
+                        eprintln!("Error reading directory entry: {}", e);
+                        continue;
+                    }    
+                };
+                let path = dir_entry.path();
 
-        let text = match fs::read_to_string(&file_bib) {
-            Ok(content) => content,
-            Err(e) => {
-                eprintln!("Error reading file {:?}: {}", file_bib, e);
-                continue;
+                if path.is_dir() {
+                    continue;
+                }
+
+                let file_stem = match path.file_stem().and_then(|s| s.to_str()) {
+                    Some(stem) => stem,
+                    None => {
+                        eprintln!("Invalid file name: {:?}", path);
+                        continue;
+                    }
+                };
+
+                let file_bib = Path::new(&dir_path).join(format!("{}.bib", file_stem));
+
+                let text = match fs::read_to_string(&file_bib) {
+                    Ok(content) => content,
+                    Err(e) => {
+                        eprintln!("Error reading file {:?}: {}", file_bib, e);
+                        continue;
+                    }
+                };
+
+                let bib = extract(text);
+
+                if let Ok(bib) = bib {
+                    if bib.is_not_empty() {
+                        bibs.push(bib);
+                    }
+                } else {
+                    eprintln!("Error while extracting Bib: {:?}", bib);
+                }
             }
-        };
-    
-        let bib = extract(text);
-
-        if let Ok(bib) = bib {
-            if bib.is_not_empty() {
-                bibs.push(bib);
-            }    
         } else {
-            eprintln!("Error while extracting Bib: {:?}", bib);
+            eprintln!("Error reading directory {}: No such directory", dir_path);
         }
     }
     bibs
@@ -135,7 +170,6 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
 
     let identifier_pattern = Regex::new(r"@article\{(\w*)")?;
     if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern) {
-        println!("{:?}", identifier);
         bib.set_identifier(identifier.to_string());
     }
 
