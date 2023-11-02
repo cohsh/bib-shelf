@@ -7,6 +7,7 @@ use crate::util::mkdir;
 
 #[derive(Clone, Debug, Default)]
 pub struct Bib {
+    category: Option<String>,
     identifier: Option<String>,
     year: Option<u64>,
     author: Option<String>,
@@ -15,6 +16,10 @@ pub struct Bib {
 }
 
 impl Bib {
+    pub fn category(&self) -> Option<&String> {
+        self.category.as_ref()
+    }
+
     pub fn identifier(&self) -> Option<&String> {
         self.identifier.as_ref()
     }
@@ -35,6 +40,14 @@ impl Bib {
         self.text.as_ref()
     }
 
+    pub fn set_category(&mut self, category: String) {
+        self.category = Some(category);
+    }
+
+    pub fn set_identifier(&mut self, identifier: String) {
+        self.identifier = Some(identifier);
+    }
+
     pub fn set_year(&mut self, year: u64) {
         self.year = Some(year);
     }
@@ -47,19 +60,16 @@ impl Bib {
         self.title = Some(title);
     }
 
-    pub fn set_identifier(&mut self, identifier: String) {
-        self.identifier = Some(identifier);
-    }
-
     pub fn set_text(&mut self, text: String) {
         self.text = Some(text);
     }
 
     pub fn is_not_empty(&self) -> bool {
+        self.category.as_ref().filter(|category| !category.is_empty()).is_some() &&
+        self.identifier.as_ref().filter(|identifier| !identifier.is_empty()).is_some() &&
         self.year.filter(|&year| year != 0).is_some() &&
         self.author.as_ref().filter(|author| !author.is_empty()).is_some() &&
         self.title.as_ref().filter(|title| !title.is_empty()).is_some() &&
-        self.identifier.as_ref().filter(|identifier| !identifier.is_empty()).is_some() &&
         self.text.as_ref().filter(|text| !text.is_empty()).is_some()
     }
 }
@@ -167,6 +177,15 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
         .replace("\\", "");
 
     bib.set_text(cleaned_text.clone());
+
+    let category_pattern = Regex::new(concat!(
+        r"@(article|inproceedings|phdthesis|masterthesis|",
+        r"book|incollection|inbook|booklet|manual|",
+        r"proceedings|techreport|unpublished|misc)$"
+    ))?;
+    if let Some(category) = extract_field(&cleaned_text, &category_pattern) {
+        bib.set_category(category.to_string());
+    }
 
     let identifier_pattern = Regex::new(r"@article\{(\w*)")?;
     if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern) {
