@@ -102,7 +102,7 @@ pub fn get_bibs_first() -> Vec<Bib> {
                 eprintln!("Error reading file {:?}: {}", file_bib, e);
                 continue;
             }
-        };        
+        };
     
         let bib = extract(text);
 
@@ -133,8 +133,9 @@ fn extract(text: String) -> Result<Bib, Box<dyn std::error::Error>> {
 
     bib.set_text(cleaned_text.clone());
 
-    let identifier_pattern = Regex::new(r"@(article[0-9]+)_?")?;
+    let identifier_pattern = Regex::new(r"@article\{(\w*)")?;
     if let Some(identifier) = extract_field(&cleaned_text, &identifier_pattern) {
+        println!("{:?}", identifier);
         bib.set_identifier(identifier.to_string());
     }
 

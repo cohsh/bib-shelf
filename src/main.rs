@@ -51,7 +51,7 @@ impl Shelf {
                 if let (Some(year), Some(author), Some(title)) = (bib.year(), bib.author(), bib.title()) {
                     let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
                     self.model.append(&spine);
-                    println!("Identifier: {}", identifier); // ここで識別子を表示
+                    println!("Identifier: {}", identifier);
                 } else {
                     eprintln!("Missing required fields for bib: {}", identifier);
                 }
