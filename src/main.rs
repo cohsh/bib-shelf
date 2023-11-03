@@ -176,7 +176,7 @@ fn build_ui(application: &gtk::Application) {
     .halign(gtk::Align::Start)
     .build();
 
-    let shelves: Rc<RefCell<HashMap<&'static str, Shelf>>> = Rc::new(RefCell::new(HashMap::new()));
+    let shelves = Rc::new(RefCell::new(shelves));
 
     vbox.append(&notebook);
     vbox.append(&bib_label);
