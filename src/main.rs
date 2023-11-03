@@ -170,7 +170,7 @@ fn build_ui(application: &gtk::Application) {
     let provider = CssProvider::new();
     provider.load_from_data("* {
                                 font-size: 14px;
-                                font-family: 'Segoe UI', 'Arial', sans-serif;
+                                font-family: 'Segoe UI', 'Arial', 'Noto Sans', sans-serif;
                             }");
     let style_context = window.style_context();
     style_context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
