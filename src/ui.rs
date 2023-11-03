@@ -42,6 +42,7 @@ pub fn display_ui(spine: &Spine) -> impl IsA<gtk::Widget> {
     hbox.append(&author);
     hbox.append(&title);
 
+
     let provider = CssProvider::new();
     provider.load_from_data("box { background-color: #CCDE68; }");
     let style_context = hbox.style_context();
@@ -51,11 +52,11 @@ pub fn display_ui(spine: &Spine) -> impl IsA<gtk::Widget> {
 
     if path.is_file() {
         style_context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
-        let green_icon = gtk::Image::from_file("assets/icons/green.svg");
-        hbox.append(&green_icon);
+        // let green_icon = gtk::Image::from_file("assets/icons/green.svg");
+        // hbox.append(&green_icon);
     } else {
-        let cream_icon = gtk::Image::from_file("assets/icons/cream.svg");
-        hbox.append(&cream_icon);
+        // let cream_icon = gtk::Image::from_file("assets/icons/cream.svg");
+        // hbox.append(&cream_icon);
     }
 
     hbox

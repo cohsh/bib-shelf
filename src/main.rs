@@ -270,17 +270,19 @@ fn item_name_box() -> gtk::Box {
         .label("Title")
         .halign(gtk::Align::Start)
         .build();
-    
+
+/*
     let label_pdf = gtk::Label::builder()
         .label("📚")
         .halign(gtk::Align::Start)
         .build();
+*/
 
     label_title.set_hexpand(true);
     label_author.set_hexpand(true);
     hbox.append(&label_year);
     hbox.append(&label_author);
     hbox.append(&label_title);
-    hbox.append(&label_pdf);
+//    hbox.append(&label_pdf);
     hbox
 }
