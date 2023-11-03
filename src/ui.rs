@@ -44,17 +44,11 @@ pub fn display_ui(spine: &Spine) -> impl IsA<gtk::Widget> {
     let path = Path::new(&path_str);
 
     if path.is_file() {
-        let path_label = gtk::Label::builder()
-            .label("✅")
-            .halign(gtk::Align::Start)
-            .build();
-        hbox.append(&path_label);
+        let green_icon = gtk::Image::from_file("assets/icons/green.svg");
+        hbox.append(&green_icon);
     } else {
-        let path_label = gtk::Label::builder()
-        .label("⬜")
-        .halign(gtk::Align::Start)
-        .build();
-        hbox.append(&path_label);
+        let cream_icon = gtk::Image::from_file("assets/icons/cream.svg");
+        hbox.append(&cream_icon);
     }
 
     hbox
