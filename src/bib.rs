@@ -92,7 +92,7 @@ pub fn get_bibs(text: String) -> Vec<Bib> {
     bibs
 }
 
-pub fn get_bibs_first() -> Vec<Bib> {
+pub fn get_bibs_first(category: &str) -> Vec<Bib> {
     let mut bibs: Vec<Bib> = Vec::new();
 
     match mkdir("./library".to_string()) {
@@ -100,62 +100,55 @@ pub fn get_bibs_first() -> Vec<Bib> {
         Err(e) => eprintln!("Failed to create directory: {:?}", e),
     };
 
-    // Ref. http://exlight.net/tutorial/bibtex-category.html
-    let subdirs = [
-        "article", "inproceedings", "phdthesis", "masterthesis", "book", "incollection",
-        "inbook", "booklet", "manual", "proceedings", "techreport", "unpublished", "misc",
-        ];
-
-    for subdir in subdirs.iter() {
-        let dir_path = format!("./library/{}", subdir);
-        match mkdir(Path::new(&dir_path)) {
-            Ok(_) => println!("Made directory {}", dir_path),
-            Err(e) => eprintln!("Error mkdir {:?}: {}", dir_path, e),
-        }
-
-        if let Ok(dirs) = fs::read_dir(&dir_path) {
-            for dir_entry in dirs {
-                let dir_entry = match dir_entry {
-                    Ok(entry) => entry,
-                    Err(e) => {
-                        eprintln!("Error reading directory entry: {}", e);
-                        continue;
-                    }
-                };
-                let path = dir_entry.path();
-
-                let file_stem = match path.file_stem().and_then(|s| s.to_str()) {
-                    Some(stem) => stem,
-                    None => {
-                        eprintln!("Invalid file name: {:?}", path);
-                        continue;
-                    }
-                };
-
-                let file_bib = path.join(format!("{}.bib", file_stem));
-
-                let text = match fs::read_to_string(&file_bib) {
-                    Ok(content) => content,
-                    Err(e) => {
-                        eprintln!("Error reading file {:?}: {}", file_bib, e);
-                        continue;
-                    }
-                };
-
-                let bib = extract(text);
-
-                if let Ok(bib) = bib {
-                    if bib.is_not_empty() {
-                        bibs.push(bib);
-                    }
-                } else {
-                    eprintln!("Error while extracting Bib: {:?}", bib);
-                }
-            }
-        } else {
-            eprintln!("Error reading directory {}: No such directory", dir_path);
-        }
+    let dir_path = format!("./library/{}", category);
+    match mkdir(Path::new(&dir_path)) {
+        Ok(_) => println!("Made directory {}", dir_path),
+        Err(e) => eprintln!("Error mkdir {:?}: {}", dir_path, e),
     }
+
+    if let Ok(dirs) = fs::read_dir(&dir_path) {
+        for dir_entry in dirs {
+            let dir_entry = match dir_entry {
+                Ok(entry) => entry,
+                Err(e) => {
+                    eprintln!("Error reading directory entry: {}", e);
+                    continue;
+                }
+            };
+            let path = dir_entry.path();
+
+            let file_stem = match path.file_stem().and_then(|s| s.to_str()) {
+                Some(stem) => stem,
+                None => {
+                    eprintln!("Invalid file name: {:?}", path);
+                    continue;
+                }
+            };
+
+            let file_bib = path.join(format!("{}.bib", file_stem));
+
+            let text = match fs::read_to_string(&file_bib) {
+                Ok(content) => content,
+                Err(e) => {
+                    eprintln!("Error reading file {:?}: {}", file_bib, e);
+                    continue;
+                }
+            };
+
+            let bib = extract(text);
+
+            if let Ok(bib) = bib {
+                if bib.is_not_empty() {
+                    bibs.push(bib);
+                }
+            } else {
+                eprintln!("Error while extracting Bib: {:?}", bib);
+            }
+        }
+    } else {
+        eprintln!("Error reading directory {}: No such directory", dir_path);
+    }
+
     bibs.sort_by(|a, b| b.year().cmp(&a.year()));
     bibs
 }

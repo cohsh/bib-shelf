@@ -4,6 +4,7 @@ use std::{
     rc::Rc,
     env,
     path::PathBuf,
+    collections::HashMap,
 };
 
 use gtk::{
@@ -87,85 +88,100 @@ fn main() {
 
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
-
-    let notebook = gtk::Notebook::new();
-    window.set_child(Some(&notebook));
-
-    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
-
     window.set_title(Some("Bib Shelf"));
     window.set_default_size(1200, 1000);
 
-    vbox.append(&item_name_box());
+    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
-    let mut shelf = Shelf::default();
-
-    let list_box = gtk::ListBox::new();
-    list_box.bind_model(Some(shelf.model()), |item| {
-        let spine = item.downcast_ref::<Spine>().unwrap();
-        ui::display_ui(spine).upcast::<gtk::Widget>()
-    });
-
-    let model = shelf.model();
-
-    list_box.connect_row_activated(glib::clone!(@weak model => move |_list_box, row| {
-        let index = row.index();
-        if let Some(item) = model.item(index as u32) {
-            if let Some(spine) = item.downcast_ref::<Spine>() {
-                let pdf_path = spine.path();
-
-                if !pdf_path.exists() {
-                    eprintln!("Error: File does not exist at {:?}", pdf_path);
-                    return;
-                }
+    let notebook = gtk::Notebook::new();
     
-                println!("PDF path: {:?}", pdf_path);
-    
-                let result = if cfg!(target_os = "linux") {
-                    if env::var("WSL_DISTRO_NAME").is_ok() {
-                        Command::new("powershell.exe").args(&["/c", "start", pdf_path.to_str().expect("Invalid Unicode in file path")]).spawn()
-                    } else {
-                        Command::new("xdg-open").arg(pdf_path).spawn()
+    let mut shelves: HashMap<&str, Shelf> = HashMap::new();
+
+    // Ref. http://exlight.net/tutorial/bibtex-category.html
+    let categories = [
+        "article", "inproceedings", "phdthesis", "masterthesis", "book", "incollection",
+        "inbook", "booklet", "manual", "proceedings", "techreport", "unpublished", "misc",
+        ];
+
+    for category in categories.iter() {
+        shelves.insert(category, Shelf::default());
+
+        let small_vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
+        small_vbox.append(&item_name_box());
+
+        let list_box = gtk::ListBox::new();
+
+        if let Some(shelf) = shelves.get_mut(category) {
+            list_box.bind_model(Some(shelf.model()), |item| {
+                let spine = item.downcast_ref::<Spine>().unwrap();
+                ui::display_ui(spine).upcast::<gtk::Widget>()
+            });
+
+            let model = shelf.model();
+
+            list_box.connect_row_activated(glib::clone!(@weak model => move |_list_box, row| {
+                let index = row.index();
+                if let Some(item) = model.item(index as u32) {
+                    if let Some(spine) = item.downcast_ref::<Spine>() {
+                        let pdf_path = spine.path();
+        
+                        if !pdf_path.exists() {
+                            eprintln!("Error: File does not exist at {:?}", pdf_path);
+                            return;
+                        }
+            
+                        println!("PDF path: {:?}", pdf_path);
+            
+                        let result = if cfg!(target_os = "linux") {
+                            if env::var("WSL_DISTRO_NAME").is_ok() {
+                                Command::new("powershell.exe").args(&["/c", "start", pdf_path.to_str().expect("Invalid Unicode in file path")]).spawn()
+                            } else {
+                                Command::new("xdg-open").arg(pdf_path).spawn()
+                            }
+                        } else if cfg!(target_os = "macos") {
+                            Command::new("open").arg(pdf_path).spawn()
+                        } else if cfg!(target_os = "windows") {
+                            Command::new("explorer").arg(pdf_path).spawn()
+                        } else {
+                            Err(std::io::Error::new(std::io::ErrorKind::Other, "Unsupported OS"))
+                        };
+            
+                        if let Err(err) = result {
+                            eprintln!("Failed to open PDF: {}", err);
+                        }
                     }
-                } else if cfg!(target_os = "macos") {
-                    Command::new("open").arg(pdf_path).spawn()
-                } else if cfg!(target_os = "windows") {
-                    Command::new("explorer").arg(pdf_path).spawn()
-                } else {
-                    Err(std::io::Error::new(std::io::ErrorKind::Other, "Unsupported OS"))
-                };
-    
-                if let Err(err) = result {
-                    eprintln!("Failed to open PDF: {}", err);
                 }
-            }
+            }));
+
+            let scrolled_window = gtk::ScrolledWindow::builder()
+                .hscrollbar_policy(gtk::PolicyType::Never)
+                .min_content_height(700)
+                .min_content_width(1200)
+                .child(&list_box)
+                .build();
+
+            small_vbox.append(&scrolled_window);
+
+            let bibs = get_bibs_first(category);
+            shelf.add_bibs(bibs);
+
+            let tab_label_article = gtk::Label::new(Some(category));
+            notebook.append_page(&small_vbox, Some(&tab_label_article));    
         }
-    }));
-    
-    let scrolled_window = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .min_content_height(700)
-        .min_content_width(1200)
-        .child(&list_box)
-        .build();
-
-    vbox.append(&scrolled_window);
-
-    let bibs = get_bibs_first();
-    shelf.add_bibs(bibs);
-
-    let shelf = Rc::new(RefCell::new(shelf));
+    }
 
     let bib_label = gtk::Label::builder()
-        .label("New bib(s)")
-        .halign(gtk::Align::Start)
-        .build();
+    .label("New bib(s)")
+    .halign(gtk::Align::Start)
+    .build();
 
-    vbox.append(&bib_label);
-    vbox.append(&input_box(shelf));
+    let shelves = Rc::new(RefCell::new(shelves));
 
-    let tab_label_article = gtk::Label::new(Some("article"));
-    notebook.append_page(&vbox, Some(&tab_label_article));
+    vbox.pack_start(&notebook, true, true, 0);
+    vbox.pack_start(&bib_label, true, true, 0);
+    vbox.pack_start(&input_box(shelves), true, true, 0);
+
+    window.set_child(Some(&vbox));
 
     let provider = CssProvider::new();
     provider.load_from_data("* {
@@ -178,7 +194,7 @@ fn build_ui(application: &gtk::Application) {
     window.show();
 }
 
-fn input_box(shelf: Rc<RefCell<Shelf>>) -> gtk::Box {
+fn input_box(shelves: Rc<RefCell<Shelf>>) -> gtk::Box {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .build();
@@ -195,14 +211,20 @@ fn input_box(shelf: Rc<RefCell<Shelf>>) -> gtk::Box {
         .build();
 
     new_button.connect_clicked(
-        glib::clone!(@weak text_view, @strong shelf => move |_| {
+        glib::clone!(@weak text_view, @strong shelves => move |_| {
             let buffer = text_view.buffer();
             let start = buffer.start_iter();
             let end = buffer.end_iter();
             let t = buffer.text(&start, &end, false).to_string();
 
             let bibs = get_bibs(t);
-            shelf.borrow_mut().add_bibs(bibs);
+
+            for bib in bibs.iter() {
+                let category = bib.category();
+
+                let shelf = shelves.get_mut(category);
+                shelf.add_bibs(bib);
+            }
         }),
     );
 
