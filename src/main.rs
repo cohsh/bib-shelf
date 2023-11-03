@@ -168,11 +168,8 @@ fn build_ui(application: &gtk::Application) {
     notebook.append_page(&vbox, Some(&tab_label_article));
 
     let provider = CssProvider::new();
-
     provider.load_from_data("* { font-size: 20px; }");
-
     let style_context = window.style_context();
-
     style_context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
     window.show();

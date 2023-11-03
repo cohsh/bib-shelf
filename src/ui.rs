@@ -1,6 +1,8 @@
 use crate::Spine;
-use gtk;
-use gtk::prelude::*;
+use gtk::{
+    prelude::*,
+    CssProvider,
+};
 use std::path::Path;
 
 pub fn display_ui(spine: &Spine) -> impl IsA<gtk::Widget> {
@@ -40,10 +42,15 @@ pub fn display_ui(spine: &Spine) -> impl IsA<gtk::Widget> {
     hbox.append(&author);
     hbox.append(&title);
 
+    let provider = CssProvider::new();
+    provider.load_from_data("box { background-color: #CCDE68; }");
+    let style_context = hbox.style_context();
+
     let path_str = spine.path();
     let path = Path::new(&path_str);
 
     if path.is_file() {
+        style_context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
         let green_icon = gtk::Image::from_file("assets/icons/green.svg");
         hbox.append(&green_icon);
     } else {
