@@ -87,7 +87,7 @@ fn main() {
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
     window.set_title(Some("Bib Shelf"));
-    window.set_default_size(1200, 1000);
+    window.set_default_size(1200, 600);
 
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
@@ -153,7 +153,7 @@ fn build_ui(application: &gtk::Application) {
 
             let scrolled_window = gtk::ScrolledWindow::builder()
                 .hscrollbar_policy(gtk::PolicyType::Never)
-                .min_content_height(700)
+                .min_content_height(400)
                 .min_content_width(1200)
                 .child(&list_box)
                 .build();
@@ -203,12 +203,13 @@ fn input_box(shelves: Rc<RefCell<HashMap<&'static str, Shelf>>>) -> gtk::Box {
     let text_view = gtk::TextView::builder()
         .editable(true)
         .width_request(1100)
-        .height_request(300)
+        .height_request(200)
         .build();
     
     let new_button = gtk::Button::builder()
         .label("Add")
         .width_request(100)
+        .height_request(200)
         .build();
 
     new_button.connect_clicked(
@@ -240,7 +241,7 @@ fn input_box(shelves: Rc<RefCell<HashMap<&'static str, Shelf>>>) -> gtk::Box {
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .min_content_width(1100)
-        .min_content_height(300)
+        .min_content_height(200)
         .child(&text_view)
         .build();
 
