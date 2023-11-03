@@ -39,39 +39,37 @@ impl Default for Shelf {
 }
 
 impl Shelf {
-    pub fn add_bibs(&mut self, bibs: Vec<Bib>) {
-        for bib in bibs.iter() {
-            if let Some(identifier) = bib.identifier() {
-                let category = bib.category();
+    pub fn add_bib(&mut self, bib: &Bib) {
+        if let Some(identifier) = bib.identifier() {
+            let category = bib.category();
 
-                let mut dir_path = PathBuf::from("library");
-                if let Some(category) = category {
-                    dir_path = dir_path.join(category);
-                }
-                dir_path = dir_path.join(identifier);
-                
-                if let Err(e) = mkdir(&dir_path) {
-                    eprintln!("Failed to create directory {}: {}", dir_path.display(), e);
-                }
-    
-                let path_pdf = dir_path.join(format!("{}.pdf", identifier));
-    
-                if let (Some(year), Some(author), Some(title)) = (bib.year(), bib.author(), bib.title()) {
-                    let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
-                    self.model.append(&spine);
-                    println!("Identifier: {}", identifier);
-                } else {
-                    eprintln!("Missing required fields for bib: {}", identifier);
-                }
-    
-                let path_bib = dir_path.join(format!("{}.bib", identifier));
-                match write(&path_bib, bib.text().unwrap_or(&String::new())) {
-                    Ok(_) => println!("Successfully wrote to {:?}", path_bib),
-                    Err(e) => eprintln!("Failed to write to {:?}: {}", path_bib, e),
-                };
-            } else {
-                eprintln!("Missing identifier for bib");
+            let mut dir_path = PathBuf::from("library");
+            if let Some(category) = category {
+                dir_path = dir_path.join(category);
             }
+            dir_path = dir_path.join(identifier);
+            
+            if let Err(e) = mkdir(&dir_path) {
+                eprintln!("Failed to create directory {}: {}", dir_path.display(), e);
+            }
+
+            let path_pdf = dir_path.join(format!("{}.pdf", identifier));
+
+            if let (Some(year), Some(author), Some(title)) = (bib.year(), bib.author(), bib.title()) {
+                let spine = Spine::new(year, author.clone(), title.clone(), path_pdf);
+                self.model.append(&spine);
+                println!("Identifier: {}", identifier);
+            } else {
+                eprintln!("Missing required fields for bib: {}", identifier);
+            }
+
+            let path_bib = dir_path.join(format!("{}.bib", identifier));
+            match write(&path_bib, bib.text().unwrap_or(&String::new())) {
+                Ok(_) => println!("Successfully wrote to {:?}", path_bib),
+                Err(e) => eprintln!("Failed to write to {:?}: {}", path_bib, e),
+            };
+        } else {
+            eprintln!("Missing identifier for bib");
         }
     }    
 
@@ -163,7 +161,10 @@ fn build_ui(application: &gtk::Application) {
             small_vbox.append(&scrolled_window);
 
             let bibs = get_bibs_first(category);
-            shelf.add_bibs(bibs);
+
+            for bib in bibs.iter() {
+                shelf.add_bib(bib);
+            };
 
             let tab_label_article = gtk::Label::new(Some(category));
             notebook.append_page(&small_vbox, Some(&tab_label_article));    
@@ -175,11 +176,11 @@ fn build_ui(application: &gtk::Application) {
     .halign(gtk::Align::Start)
     .build();
 
-    let shelves = Rc::new(RefCell::new(shelves));
+    let shelves: Rc<RefCell<HashMap<&'static str, Shelf>>> = Rc::new(RefCell::new(HashMap::new()));
 
-    vbox.pack_start(&notebook, true, true, 0);
-    vbox.pack_start(&bib_label, true, true, 0);
-    vbox.pack_start(&input_box(shelves), true, true, 0);
+    vbox.append(&notebook);
+    vbox.append(&bib_label);
+    vbox.append(&input_box(shelves));
 
     window.set_child(Some(&vbox));
 
@@ -194,7 +195,7 @@ fn build_ui(application: &gtk::Application) {
     window.show();
 }
 
-fn input_box(shelves: Rc<RefCell<Shelf>>) -> gtk::Box {
+fn input_box(shelves: Rc<RefCell<HashMap<&'static str, Shelf>>>) -> gtk::Box {
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .build();
@@ -219,11 +220,19 @@ fn input_box(shelves: Rc<RefCell<Shelf>>) -> gtk::Box {
 
             let bibs = get_bibs(t);
 
-            for bib in bibs.iter() {
-                let category = bib.category();
+            let mut shelves_borrowed = shelves.borrow_mut();
 
-                let shelf = shelves.get_mut(category);
-                shelf.add_bibs(bib);
+            for bib in bibs.iter() {
+                let category = match bib.category() {
+                    Some(c) => c.as_str(),
+                    None => continue,
+                };
+
+                if let Some(shelf) = shelves_borrowed.get_mut(category) {
+                    shelf.add_bib(bib);
+                } else {
+                    eprintln!("Category {:?} not found.", category);
+                };
             }
         }),
     );
