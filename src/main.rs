@@ -92,7 +92,7 @@ fn build_ui(application: &gtk::Application) {
     window.set_title(Some("Bib Shelf"));
     window.set_default_size(1200, 600);
 
-    let mut active_path = String::new();
+    let active_path = Rc::new(RefCell::new(PathBuf::new()));
 
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
@@ -122,14 +122,13 @@ fn build_ui(application: &gtk::Application) {
 
             let model = shelf.model();
 
-            list_box.connect_row_activated(glib::clone!(@weak model => move |_list_box, row| {
+            list_box.connect_row_activated(glib::clone!(@weak model, @strong active_path => move |_list_box, row| {
                 let index = row.index();
                 if let Some(item) = model.item(index as u32) {
                     if let Some(spine) = item.downcast_ref::<Spine>() {
                         let pdf_path = spine.path();
-                        active_path = spine.path();
 
-                        println!("{:?}", active_path);
+                        *active_path.borrow_mut() = pdf_path.clone();
         
                         if !pdf_path.exists() {
                             eprintln!("Error: File does not exist at {:?}", pdf_path);
@@ -207,12 +206,19 @@ fn build_ui(application: &gtk::Application) {
 
     let button = gtk::Button::with_label("Add");
 
-    let combo_box_clone = combo_box.clone();
-    button.connect_clicked(move |_| {
-        if let Some(text) = combo_box_clone.active_text() {
-            println!("Selected PDF: {}", text);
+    button.connect_clicked(glib::clone!(@weak combo_box, @weak active_path => move |_| {
+        if let Some(text) = combo_box.active_text() {
+            let mut path = PathBuf::from("./pdf_pool");
+            path.push(&text);
+    
+            let active_path_borrowed = active_path.borrow();
+            if !active_path_borrowed.exists() {
+                if let Err(e) = fs::rename(&path, &*active_path_borrowed) {
+                    eprintln!("Failed to rename file: {}", e);
+                }
+            }
         }
-    });
+    }));
     
     let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 5);
 
@@ -337,26 +343,6 @@ fn get_active_page_listbox_item(notebook: &gtk::Notebook) {
     // アクティブなNotebookのページを取得
     if let Some(page_number) = notebook.current_page() {
         println!("Active notebook page: {}", page_number);
-
-        if let Some(page_widget) = notebook.nth_page(Some(page_number)) {
-            // page_widgetがScrolledWindowであると仮定し、その子ウィジェットを取得します。
-            if let Some(scrolled_window) = page_widget.downcast_ref::<gtk::ScrolledWindow>() {
-                // ScrolledWindowの中のListBoxを取得します。
-                if let Some(listbox) = scrolled_window.child().and_then(|child| child.downcast::<gtk::ListBox>().ok()) {
-                    // 選択されたListBoxのアイテムを取得
-                    if let Some(row) = listbox.selected_row() {
-                        // リストボックスのアイテムの詳細を取得する処理をここに記述します。
-                        if let Some(label) = row.child().and_then(|child| child.downcast::<gtk::Label>().ok()) {
-                            println!("Selected listbox item: {}", label.text().to_string());
-                        }
-                    } else {
-                        println!("No listbox item is selected.");
-                    }
-                }
-            } else {
-                println!("Active page widget is not a ScrolledWindow.");
-            }
-        }
     } else {
         println!("No active page found.");
     }
