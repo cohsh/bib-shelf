@@ -14,6 +14,7 @@ use gtk::{
     glib,
     CssProvider,
     ComboBoxText,
+    ListStore,
 };
 
 mod spine;
@@ -206,7 +207,7 @@ fn build_ui(application: &gtk::Application) {
 
     let button = gtk::Button::with_label("Add");
 
-    button.connect_clicked(glib::clone!(@weak combo_box, @weak active_path => move |_| {
+    button.connect_clicked(glib::clone!(@strong combo_box, @weak active_path => move |_| {
         if let Some(text) = combo_box.active_text() {
             let mut path = PathBuf::from("./pdf_pool");
             path.push(&text);
@@ -216,6 +217,7 @@ fn build_ui(application: &gtk::Application) {
                 if let Err(e) = fs::rename(&path, &*active_path_borrowed) {
                     eprintln!("Failed to rename file: {}", e);
                 }
+                remove_item_by_text(&combo_box, path);
             }
         }
     }));
@@ -251,6 +253,26 @@ fn build_ui(application: &gtk::Application) {
     style_context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
     window.show();
+}
+
+fn remove_item_by_text(combo_box_text: &ComboBoxText, text_to_remove: PathBuf) {
+    if let Some(model) = combo_box_text.model() {
+        if let Some(list_store) = model.downcast_ref::<ListStore>() {
+            if let Some(iter) = list_store.iter_first() {
+                loop {
+                    if let Some(text) = list_store.get_value(&iter, 0).get::<PathBuf>().ok() {
+                        if text == text_to_remove {
+                            list_store.remove(&iter);
+                            break;
+                        }
+                    }
+                    if !list_store.iter_next(&iter) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn input_box(shelves: Rc<RefCell<HashMap<&'static str, Shelf>>>) -> gtk::Box {
