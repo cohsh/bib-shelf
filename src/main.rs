@@ -92,6 +92,8 @@ fn build_ui(application: &gtk::Application) {
     window.set_title(Some("Bib Shelf"));
     window.set_default_size(1200, 600);
 
+    let mut active_path = String::new();
+
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 10);
 
     let notebook = gtk::Notebook::new();
@@ -125,6 +127,9 @@ fn build_ui(application: &gtk::Application) {
                 if let Some(item) = model.item(index as u32) {
                     if let Some(spine) = item.downcast_ref::<Spine>() {
                         let pdf_path = spine.path();
+                        active_path = spine.path();
+
+                        println!("{:?}", active_path);
         
                         if !pdf_path.exists() {
                             eprintln!("Error: File does not exist at {:?}", pdf_path);
