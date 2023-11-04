@@ -5,6 +5,7 @@ use std::{
     env,
     path::PathBuf,
     collections::HashMap,
+    fs,
 };
 
 use gtk::{
@@ -12,6 +13,7 @@ use gtk::{
     gio,
     glib,
     CssProvider,
+    ComboBoxText,
 };
 
 mod spine;
@@ -171,16 +173,60 @@ fn build_ui(application: &gtk::Application) {
         }
     }
 
+    let combo_label = gtk::Label::builder()
+    .label("Add PDF to Active Bib")
+    .halign(gtk::Align::Start)
+    .build();
+
+    let combo_box = ComboBoxText::new();
+
+    if let Ok(entries) = fs::read_dir("./pdf_pool/") {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("pdf") {
+                if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
+                    combo_box.append(None, file_name);
+                }
+            }
+        }
+    }
+
+    combo_box.set_active(Some(0));
+
+    combo_box.connect_changed(|c| {
+        if let Some(text) = c.active_text() {
+            println!("Selected: {}", text);
+        }
+    });
+
+    let button = gtk::Button::with_label("Add");
+
+    let combo_box_clone = combo_box.clone();
+    button.connect_clicked(move |_| {
+        if let Some(text) = combo_box_clone.active_text() {
+            println!("Selected PDF: {}", text);
+        }
+    });
+    
+    let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+
+    hbox.append(&combo_box);
+    hbox.append(&button);
+
     let bib_label = gtk::Label::builder()
-    .label("New bib(s)")
+    .label("Add New Bib(s)")
     .halign(gtk::Align::Start)
     .build();
 
     let shelves = Rc::new(RefCell::new(shelves));
 
     vbox.append(&notebook);
+
+    vbox.append(&combo_label);
+    vbox.append(&hbox);
+
     vbox.append(&bib_label);
-    vbox.append(&input_box(shelves));
+    vbox.append(&input_box(shelves));    
 
     window.set_child(Some(&vbox));
 
@@ -247,6 +293,7 @@ fn input_box(shelves: Rc<RefCell<HashMap<&'static str, Shelf>>>) -> gtk::Box {
 
     hbox.append(&scrolled_window);
     hbox.append(&new_button);
+    
     hbox
 }
 
