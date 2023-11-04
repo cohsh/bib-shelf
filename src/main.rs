@@ -82,6 +82,7 @@ impl Shelf {
 
 fn main() {
     let application = gtk::Application::new(Some("com.github.cohsh.bib-shelf"), Default::default());
+
     application.connect_activate(build_ui);
     application.run();
 }
@@ -325,4 +326,33 @@ fn item_name_box() -> gtk::Box {
     hbox.append(&label_author);
     hbox.append(&label_title);
     hbox
+}
+
+fn get_active_page_listbox_item(notebook: &gtk::Notebook) {
+    // アクティブなNotebookのページを取得
+    if let Some(page_number) = notebook.current_page() {
+        println!("Active notebook page: {}", page_number);
+
+        if let Some(page_widget) = notebook.nth_page(Some(page_number)) {
+            // page_widgetがScrolledWindowであると仮定し、その子ウィジェットを取得します。
+            if let Some(scrolled_window) = page_widget.downcast_ref::<gtk::ScrolledWindow>() {
+                // ScrolledWindowの中のListBoxを取得します。
+                if let Some(listbox) = scrolled_window.child().and_then(|child| child.downcast::<gtk::ListBox>().ok()) {
+                    // 選択されたListBoxのアイテムを取得
+                    if let Some(row) = listbox.selected_row() {
+                        // リストボックスのアイテムの詳細を取得する処理をここに記述します。
+                        if let Some(label) = row.child().and_then(|child| child.downcast::<gtk::Label>().ok()) {
+                            println!("Selected listbox item: {}", label.text().to_string());
+                        }
+                    } else {
+                        println!("No listbox item is selected.");
+                    }
+                }
+            } else {
+                println!("Active page widget is not a ScrolledWindow.");
+            }
+        }
+    } else {
+        println!("No active page found.");
+    }
 }
