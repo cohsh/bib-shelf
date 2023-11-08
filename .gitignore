@@ -23,6 +23,7 @@ target/
 
 # Private
 ref.bib
+demo.bib
 data/
 papers/
 library/
